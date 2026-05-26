@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to any skills-compatible AI agent host when working with code in this repository.
 
 > **For End Users:** See [README.md](README.md) for installation and usage.
 >
@@ -8,14 +8,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-A **Claude Code skill** - executable documentation that Claude loads to provide OpenTofu expertise on macOS and Linux. It encodes opentofu-oriented patterns into Claude's context as version-controlled AI instructions.
+A **Skills framework skill** - executable documentation that a compatible host loads to provide OpenTofu expertise on macOS and Linux. It encodes opentofu-oriented patterns as version-controlled AI instructions.
 
 ## Repository Structure
 
 ```
 terraform-skill/
 ├── skills/
-│   └── opentofu-skill/              # Skill autodiscovered by Claude Code plugin system
+│   └── opentofu-skill/              # Skill autodiscovered by skills-compatible hosts
 │       ├── SKILL.md                 # Core skill file (~305 lines)
 │       └── references/              # Reference files loaded on demand
 │           ├── ci-cd-workflows.md
@@ -43,7 +43,7 @@ The repository name remains `terraform-skill` for compatibility, while the on-di
 
 ### Validation
 
-CI runs automatically on PRs touching `SKILL.md`, `references/**/*.md`, or `.claude-plugin/**`. To check locally:
+CI runs automatically on PRs touching `SKILL.md`, `references/**/*.md`, or `.codex-plugin/**`. To check locally:
 
 ```bash
 # Check SKILL.md line count (soft target ~300 lines; CI warns only above 500)
@@ -71,9 +71,9 @@ grep -oP '\[.*?\]\(references/.*?\.md.*?\)' SKILL.md references/*.md | \
 
 No automated suite. Manual flow:
 1. Edit `SKILL.md` or a `references/*.md` file
-2. Reload the skill in Claude Code
+2. Reload the skill in your agent host
 3. Run real OpenTofu queries (e.g., "Create an OpenTofu module with tests")
-4. Confirm Claude applies the new patterns
+4. Confirm the host agent applies the new patterns
 5. Re-check `tests/baseline-scenarios.md` for regressions
 
 ## Commit Conventions & Releases
@@ -99,7 +99,7 @@ The release workflow automatically:
 
 ### Plugin Structure
 
-The skill lives at `skills/opentofu-skill/SKILL.md` — Claude Code autodiscovers any `skills/<name>/SKILL.md` (see [plugins reference](https://code.claude.com/docs/en/plugins-reference)). Reference files sit next to it under `skills/opentofu-skill/references/` so relative links keep working.
+The skill lives at `skills/opentofu-skill/SKILL.md` - skills-compatible hosts autodiscover `skills/<name>/SKILL.md` based on their host integration. Reference files sit next to it under `skills/opentofu-skill/references/` so relative links keep working.
 
 ### YAML Frontmatter (required fields)
 

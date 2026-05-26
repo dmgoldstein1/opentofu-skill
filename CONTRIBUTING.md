@@ -102,7 +102,7 @@ The description must focus on WHEN to use (triggers, symptoms), not WHAT the ski
 
 ### LLM Consumption Rules
 
-Every SKILL.md or `references/*.md` addition must follow the rules in [CLAUDE.md §LLM Consumption Rules](CLAUDE.md#llm-consumption-rules-enforce-in-every-pr-review):
+Every SKILL.md or `references/*.md` addition must follow the rules in [AGENTS.md §LLM Consumption Rules](AGENTS.md#llm-consumption-rules-enforce-in-every-pr-review):
 
 - Decision table before playbook
 - No before/after diffs that restate the phase steps
@@ -118,7 +118,7 @@ Reviewers reject PRs that violate these.
 ```text
 terraform-skill/
 ├── skills/
-│   └── opentofu-skill/             # Autodiscovered by Claude Code plugin system
+│   └── opentofu-skill/             # Autodiscovered by skills-compatible hosts
 │       ├── SKILL.md                # Core skill (~305 lines)
 │       └── references/             # Reference files (progressive disclosure)
 │           ├── ci-cd-workflows.md
@@ -398,10 +398,10 @@ See the [Releases section in README.md](README.md#releases) for details.
 
 **For contributors:**
 
-- [CLAUDE.md](CLAUDE.md) — development guidelines, architecture, and LLM Consumption Rules
+- [AGENTS.md](AGENTS.md) — development guidelines, architecture, and LLM Consumption Rules
 - [tests/baseline-scenarios.md](tests/baseline-scenarios.md) — testing scenarios
 
 **Skill standards:**
 
-- [Claude Code Skills Documentation](https://docs.claude.ai/docs/agent-skills)
+- [Agent Skills](https://agentskills.io)
 - writing-skills (reference skill for skill development)
