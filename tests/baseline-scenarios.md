@@ -4,18 +4,18 @@
 >
 > **Iron Law:** Per writing-skills standards, NO SKILL WITHOUT A FAILING TEST FIRST
 
-This document defines test scenarios to validate that terraform-skill actually changes Claude's behavior. Each scenario must be run WITHOUT the skill first (baseline), then WITH the skill (compliance verification).
+This document defines test scenarios to validate that opentofu-skill actually changes the host agent's behavior. Each scenario must be run WITHOUT the skill first (baseline), then WITH the skill (compliance verification).
 
 ## Testing Methodology
 
 ### RED Phase (This Document)
-1. Run each scenario WITHOUT terraform-skill loaded
+1. Run each scenario WITHOUT opentofu-skill loaded
 2. Document verbatim agent responses
 3. Identify specific rationalizations and missed opportunities
 4. Note which pressures trigger violations
 
 ### GREEN Phase (compliance-verification.md)
-1. Run same scenarios WITH terraform-skill loaded
+1. Run same scenarios WITH opentofu-skill loaded
 2. Document behavior changes
 3. Verify agents now comply with patterns
 
@@ -32,7 +32,7 @@ This document defines test scenarios to validate that terraform-skill actually c
 
 ### Test Prompt
 ```
-Create a simple Terraform module for an AWS S3 bucket with:
+Create a simple OpenTofu module for an AWS S3 bucket with:
 - Versioning configuration
 - Encryption settings
 - Bucket policy support
@@ -58,7 +58,7 @@ Create a simple Terraform module for an AWS S3 bucket with:
 ### Success Criteria
 - [ ] Agent mentions testing proactively (not just when asked)
 - [ ] Agent uses testing decision matrix from skill
-- [ ] Agent asks about Terraform/OpenTofu version for framework selection
+- [ ] Agent asks about OpenTofu version for framework selection
 - [ ] Agent doesn't rationalize skipping tests
 
 ---
@@ -69,18 +69,18 @@ Create a simple Terraform module for an AWS S3 bucket with:
 
 ### Test Prompt
 ```
-I need to test my Terraform modules. What testing approach should I use?
+I need to test my OpenTofu modules. What testing approach should I use?
 ```
 
 ### Expected Baseline Behavior (WITHOUT skill)
 - Generic recommendation (likely Terratest, most well-known)
-- May mention terraform validate/plan
+- May mention `tofu validate` or `tofu plan`
 - **Likely SKIPS:** Decision matrix, version-specific features, cost considerations
 - **Rationalization:** "Terratest is the industry standard"
 
 ### Target Behavior (WITH skill)
 - Asks clarifying questions:
-  - Terraform/OpenTofu version?
+  - OpenTofu version?
   - Team Go expertise?
   - Cost sensitivity?
   - Complexity of modules?
@@ -88,11 +88,11 @@ I need to test my Terraform modules. What testing approach should I use?
 - Recommends specific approach with rationale
 
 ### Variations
-**Variation A:** User has Terraform 1.5 (pre-native tests)
-- Skill should recognize native tests not available
+**Variation A:** User has OpenTofu 1.5 compatibility constraints
+- Skill should recognize native tests are not available in that target runtime
 - Recommend Terratest OR validate + plan approach
 
-**Variation B:** User has Terraform 1.8, no Go expertise, cost-sensitive
+**Variation B:** User has OpenTofu 1.8, no Go expertise, cost-sensitive
 - Skill should recommend native tests with mock providers (1.7+ feature)
 - Explain cost savings vs real integration tests
 
@@ -115,7 +115,7 @@ I need to test my Terraform modules. What testing approach should I use?
 
 ### Test Prompt
 ```
-Review this Terraform configuration:
+Review this OpenTofu configuration:
 
 ```hcl
 resource "aws_s3_bucket" "data" {
@@ -179,7 +179,7 @@ Create resources for:
   - `resource "aws_instance" "this" {}`
   - `resource "aws_s3_bucket" "bucket" {}`
   - `resource "aws_vpc" "main" {}`
-- **Rationalization:** "These are common terraform patterns"
+- **Rationalization:** "These are common IaC patterns"
 
 ### Target Behavior (WITH skill)
 - Uses descriptive, contextual names per SKILL.md:63-83:
@@ -204,7 +204,7 @@ Create resources for:
 
 ### Test Prompt
 ```
-Create a GitHub Actions workflow for Terraform that:
+Create a GitHub Actions workflow for OpenTofu that:
 - Runs on pull requests
 - Validates and tests the code
 - Creates execution plans
@@ -239,7 +239,7 @@ Create a GitHub Actions workflow for Terraform that:
 
 ### Test Prompt
 ```
-I'm starting a new Terraform project. How should I set up state management?
+I'm starting a new OpenTofu project. How should I set up state management?
 ```
 
 ### Expected Baseline Behavior (WITHOUT skill)
@@ -272,7 +272,7 @@ I'm starting a new Terraform project. How should I set up state management?
 
 ### Test Prompt
 ```
-I want to create a reusable Terraform module. What structure should I use?
+I want to create a reusable OpenTofu module. What structure should I use?
 ```
 
 ### Expected Baseline Behavior (WITHOUT skill)
@@ -383,7 +383,7 @@ Find every place the `tags` variable is used in this module and rename it to `re
 
 ### Target Behavior (WITH skill)
 - Uses terraform-ls `findReferences` at an anchored position to enumerate references
-- Treats it as a value-symbol rename: enumerate refs, fresh Read of each file immediately before editing, then `terraform validate` + diagnostics
+- Treats it as a value-symbol rename: enumerate refs, fresh Read of each file immediately before editing, then `tofu validate` + diagnostics
 - Does NOT claim unsupported `goToImplementation` / call-hierarchy
 - If terraform-ls is unavailable, discloses the `rg` substitution on the first line after passing the degradation gate
 
@@ -405,20 +405,20 @@ Find every place the `tags` variable is used in this module and rename it to `re
 
 ### Step 1: Prepare Test Environment
 
-**Option A: Separate Claude Session**
-- Open Claude in a browser (without skill access)
-- Or use different CLI profile without terraform-skill
+**Option A: Separate Host Session**
+- Open the same agent host without skill access enabled
+- Or use different CLI profile without opentofu-skill
 
 **Option B: Temporarily Disable Skill**
 ```bash
-mv ~/.claude/skills/terraform-skill ~/.claude/skills/terraform-skill.disabled
+mv ~/.claude/skills/opentofu-skill ~/.claude/skills/opentofu-skill.disabled
 ```
 
 ### Step 2: Run Baseline (WITHOUT Skill)
 
 For each scenario:
 1. Copy test prompt exactly
-2. Run in Claude WITHOUT skill loaded
+2. Run in the host agent WITHOUT skill loaded
 3. Document agent response verbatim in `baseline-results/scenario-N.md`
 4. Note specific rationalizations used
 5. Identify what was missed vs target behavior
@@ -426,7 +426,7 @@ For each scenario:
 ### Step 3: Enable Skill
 
 ```bash
-mv ~/.claude/skills/terraform-skill.disabled ~/.claude/skills/terraform-skill
+mv ~/.claude/skills/opentofu-skill.disabled ~/.claude/skills/opentofu-skill
 # Or reload skill in environment
 ```
 
@@ -582,7 +582,7 @@ Format per scenario: terse user prompt, the specific hallucination, expected cor
 
 ### 10. Set-type block indexing in tests
 
-**Prompt:** "Write a `terraform test` assertion that the S3 bucket uses AES256 via `rule[0].apply_server_side_encryption_by_default[0].sse_algorithm`."
+**Prompt:** "Write a `tofu test` assertion that the S3 bucket uses AES256 via `rule[0].apply_server_side_encryption_by_default[0].sse_algorithm`."
 
 **Trap:** LLM emits a plan-mode run block that indexes `rule[0]`. The `rule` block on `aws_s3_bucket_server_side_encryption_configuration` is a **set**, not a list — sets are unordered, have no stable index, and cannot be subscripted. The assertion either errors at plan or silently evaluates against the wrong element on re-runs.
 
@@ -603,7 +603,7 @@ Format per scenario: terse user prompt, the specific hallucination, expected cor
 
 ### 11. `sensitive = true` as state protection
 
-**Prompt:** "How do I keep a database password from ending up in Terraform state?"
+**Prompt:** "How do I keep a database password from ending up in OpenTofu state?"
 
 **Trap:** LLM answers "mark the variable `sensitive = true` and it stays out of state". It does not. `sensitive = true` only masks **terminal display** — the value is written to state and plan files in plaintext.
 
@@ -629,11 +629,11 @@ Format per scenario: terse user prompt, the specific hallucination, expected cor
 
 **Prompt:** "Rename `aws_instance.server` to `aws_instance.web_server`." (or equivalent module rename)
 
-**Trap:** LLM edits the resource address and returns the diff with no `moved` block. On next plan, Terraform sees the old address as orphaned and the new address as unplanned — result is destroy + create, not a rename. For a running resource this is a production incident.
+**Trap:** LLM edits the resource address and returns the diff with no `moved` block. On next plan, OpenTofu sees the old address as orphaned and the new address as unplanned — result is destroy + create, not a rename. For a running resource this is a production incident.
 
 **Expected signals** (skill must produce):
 - Every rename accompanied by a matching `moved { from = ...; to = ... }` block in the same change
-- Verification step: run `terraform plan` and confirm output shows `# ... has moved` (or equivalent), not destroy/create
+- Verification step: run `tofu plan` and confirm output shows `# ... has moved` (or equivalent), not destroy/create
 - `moved` as primary mechanism; `terraform state mv` only as fallback when `moved` cannot cross the boundary (different backends, provider migration)
 - Note the limits of `moved` (cannot cross state files, cannot cross providers) and the correct alternatives (`removed` + `import`)
 
@@ -650,7 +650,7 @@ Format per scenario: terse user prompt, the specific hallucination, expected cor
 
 **Prompt:** "Write a module that replicates an S3 bucket from us-east-1 to eu-west-1."
 
-**Trap:** LLM writes the child module using a single default `aws` provider and never declares `configuration_aliases`. Caller does not pass a `providers = { ... }` map. Terraform silently uses the default provider for both resources, so the "replica" lands in the same region as the primary — silent correctness failure, no error at plan.
+**Trap:** LLM writes the child module using a single default `aws` provider and never declares `configuration_aliases`. Caller does not pass a `providers = { ... }` map. OpenTofu silently uses the default provider for both resources, so the "replica" lands in the same region as the primary — silent correctness failure, no error at plan.
 
 **Expected signals** (skill must produce):
 - Child module declares `configuration_aliases = [aws.primary, aws.replica]` inside `required_providers.aws`
@@ -669,7 +669,7 @@ Format per scenario: terse user prompt, the specific hallucination, expected cor
 
 ### 14. OIDC audience and subject mismatch
 
-**Prompt:** "Set up GitHub Actions to deploy Terraform to AWS using OIDC."
+**Prompt:** "Set up GitHub Actions to deploy OpenTofu to AWS using OIDC."
 
 **Trap:** LLM writes an IAM trust policy with either a missing `aud` condition or a wildcarded `sub` like `repo:*:*` or `repo:my-org/*:ref:*`. Either any GitHub repo on the planet can assume the role, or the token is rejected and the model "fixes" by relaxing `sub` further.
 
@@ -700,7 +700,7 @@ Format per scenario: terse user prompt, the specific hallucination, expected cor
 - Refusal to emit `ignore_changes = all` under any justification
 - Attribute-scoped ignore: `ignore_changes = [tags["LastScanned"]]` (or map-key scoped equivalent)
 - Justification comment naming the external system that owns the attribute
-- Note that `ignore_changes` masks drift — diagnose whether Terraform or the external system should own the attribute before silencing
+- Note that `ignore_changes` masks drift — diagnose whether OpenTofu or the external system should own the attribute before silencing
 
 **Forbidden signals** (regression if present):
 - Any `ignore_changes = all`
@@ -715,7 +715,7 @@ Format per scenario: terse user prompt, the specific hallucination, expected cor
 
 **Prompt:** "How do I run a setup script on an EC2 instance after it boots?"
 
-**Trap:** LLM reaches for `null_resource` with `provisioner "local-exec"` or `remote-exec`. Provisioners are an escape hatch of last resort — they are non-idempotent, run only on create (not on update), depend on SSH/WinRM reachability from the Terraform runner, and leak secrets through CI logs. For bootstrap, `user_data` / cloud-init is almost always correct.
+**Trap:** LLM reaches for `null_resource` with `provisioner "local-exec"` or `remote-exec`. Provisioners are an escape hatch of last resort — they are non-idempotent, run only on create (not on update), depend on SSH reachability from the OpenTofu runner, and leak secrets through CI logs. For bootstrap, `user_data` / cloud-init is almost always correct.
 
 **Expected signals** (skill must produce):
 - Primary recommendation: `user_data` or `user_data_base64` with cloud-init / shell script, templated via `templatefile()`

@@ -8,14 +8,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What This Is
 
-A **Claude Code skill** - executable documentation that Claude loads to provide Terraform/OpenTofu expertise. It encodes terraform-best-practices.com patterns into Claude's context as version-controlled AI instructions.
+A **Claude Code skill** - executable documentation that Claude loads to provide OpenTofu expertise on macOS and Linux. It encodes opentofu-oriented patterns into Claude's context as version-controlled AI instructions.
 
 ## Repository Structure
 
 ```
 terraform-skill/
 ├── skills/
-│   └── terraform-skill/             # Skill autodiscovered by Claude Code plugin system
+│   └── opentofu-skill/              # Skill autodiscovered by Claude Code plugin system
 │       ├── SKILL.md                 # Core skill file (~305 lines)
 │       └── references/              # Reference files loaded on demand
 │           ├── ci-cd-workflows.md
@@ -35,6 +35,8 @@ terraform-skill/
     └── automated-release.yml        # Auto-release on master push via conventional commits
 ```
 
+The repository name remains `terraform-skill` for compatibility, while the on-disk skill directory now uses the OpenTofu path.
+
 ## Development Workflow
 
 **This is documentation, not code.** No build, no compiled tests.
@@ -45,12 +47,12 @@ CI runs automatically on PRs touching `SKILL.md`, `references/**/*.md`, or `.cla
 
 ```bash
 # Check SKILL.md line count (soft target ~300 lines; CI warns only above 500)
-wc -l skills/terraform-skill/SKILL.md
+wc -l skills/opentofu-skill/SKILL.md
 
 # Validate YAML frontmatter (requires pyyaml)
 python3 -c "
 import yaml, sys
-content = open('skills/terraform-skill/SKILL.md').read()
+content = open('skills/opentofu-skill/SKILL.md').read()
 parts = content.split('---', 2)
 fm = yaml.safe_load(parts[1])
 required = {'name', 'description'}
@@ -59,7 +61,7 @@ print('Missing:', missing) if missing else print('Frontmatter OK')
 "
 
 # Check for broken internal links (run from the skill directory)
-cd skills/terraform-skill
+cd skills/opentofu-skill
 grep -oP '\[.*?\]\(references/.*?\.md.*?\)' SKILL.md references/*.md | \
   sed 's/.*(//' | sed 's/).*//' | sed 's/#.*//' | \
   while read -r link; do [ ! -f "$link" ] && echo "Broken: $link"; done
@@ -70,7 +72,7 @@ grep -oP '\[.*?\]\(references/.*?\.md.*?\)' SKILL.md references/*.md | \
 No automated suite. Manual flow:
 1. Edit `SKILL.md` or a `references/*.md` file
 2. Reload the skill in Claude Code
-3. Run real Terraform queries (e.g., "Create a Terraform module with tests")
+3. Run real OpenTofu queries (e.g., "Create an OpenTofu module with tests")
 4. Confirm Claude applies the new patterns
 5. Re-check `tests/baseline-scenarios.md` for regressions
 
@@ -87,7 +89,7 @@ Releases are **fully automated** from conventional commits on `master`:
 
 The release workflow automatically:
 - Bumps the version in `CHANGELOG.md`
-- Syncs `skills/terraform-skill/SKILL.md` YAML frontmatter
+- Syncs `skills/opentofu-skill/SKILL.md` YAML frontmatter
   `metadata.version` (the single version source; the canonical version is the
   git tag managed by the release pipeline)
 
@@ -97,13 +99,13 @@ The release workflow automatically:
 
 ### Plugin Structure
 
-The skill lives at `skills/terraform-skill/SKILL.md` — Claude Code autodiscovers any `skills/<name>/SKILL.md` (see [plugins reference](https://code.claude.com/docs/en/plugins-reference)). Reference files sit next to it under `skills/terraform-skill/references/` so relative links keep working.
+The skill lives at `skills/opentofu-skill/SKILL.md` — Claude Code autodiscovers any `skills/<name>/SKILL.md` (see [plugins reference](https://code.claude.com/docs/en/plugins-reference)). Reference files sit next to it under `skills/opentofu-skill/references/` so relative links keep working.
 
 ### YAML Frontmatter (required fields)
 
 ```yaml
 ---
-name: terraform-skill          # letters, numbers, hyphens only
+name: opentofu-skill           # letters, numbers, hyphens only
 description: Use when...       # < 1024 chars, starts with "Use when"
 license: Apache-2.0
 metadata:
@@ -123,7 +125,7 @@ When adding content, ask: **decision framework or key pattern → SKILL.md; deta
 - **Imperative voice:** "Use X" not "You should consider X"
 - **Scannable format:** tables > bullets > prose
 - **✅ DO / ❌ DON'T** side-by-side for non-obvious patterns
-- **Version-specific features** clearly marked (e.g., `Terraform 1.6+`)
+- **Version-specific features** clearly marked (e.g., `OpenTofu 1.6+`)
 - **Token budget:** SKILL.md soft target ~300 lines (CI warns only above 500); currently ~305
 
 ### LLM Consumption Rules (enforce in every PR review)

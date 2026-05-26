@@ -1,6 +1,6 @@
 # Compliance Verification (GREEN Phase)
 
-> **Purpose:** Verify that terraform-skill changes agent behavior per TDD methodology
+> **Purpose:** Verify that opentofu-skill changes agent behavior per TDD methodology
 >
 > **Prerequisite:** baseline-scenarios.md must be completed first (RED phase)
 
@@ -14,13 +14,13 @@ This document defines the GREEN phase of TDD testing: running the same scenarios
 
 1. ✅ RED phase complete (`baseline-scenarios.md` scenarios run WITHOUT skill)
 2. ✅ Baseline results documented in `baseline-results/` directory
-3. ✅ Skill loaded in Claude environment
+3. ✅ Skill loaded in host agent environment
 
 ### GREEN Phase Process
 
 For each scenario from `baseline-scenarios.md`:
 
-1. **Load terraform-skill** in Claude environment
+1. **Load opentofu-skill** in the host agent environment
 2. **Run exact same prompt** as baseline
 3. **Document agent response** in `compliance-results/scenario-N.md`
 4. **Compare to baseline** - what changed?
@@ -72,7 +72,7 @@ For each scenario, document:
 **Baseline → Compliance Changes:**
 - Agent NOW proactively mentions testing (not skips it)
 - Agent uses testing decision matrix from SKILL.md:90-103
-- Agent asks about Terraform version for framework selection
+- Agent asks about OpenTofu version for framework selection
 - Agent includes testing in deliverables OR asks user preference
 
 ### Success Criteria Verification
@@ -87,7 +87,7 @@ For each scenario, document:
 Look for agent:
 - Referencing "testing strategy framework"
 - Mentioning "native tests (1.6+)" or "Terratest"
-- Asking "What Terraform/OpenTofu version are you using?"
+- Asking "What OpenTofu version are you using?"
 - Including test files in module structure
 
 ### Common Compliance Failures

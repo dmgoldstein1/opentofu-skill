@@ -1,7 +1,7 @@
 # Security & Compliance
 
 > **Part of:** [terraform-skill](../SKILL.md)
-> **Purpose:** Security best practices and compliance patterns for Terraform/OpenTofu
+> **Purpose:** Security best practices and compliance patterns for OpenTofu on macOS and Linux
 
 This document provides security hardening guidance and compliance automation strategies for infrastructure-as-code.
 
@@ -26,8 +26,8 @@ This document provides security hardening guidance and compliance automation str
 trivy config .
 checkov -d .
 
-# Compliance testing (policy-as-code against a terraform plan JSON)
-terraform plan -out=tfplan && terraform show -json tfplan > tfplan.json
+# Compliance testing (policy-as-code against an OpenTofu plan JSON)
+tofu plan -out=tfplan && tofu show -json tfplan > tfplan.json
 conftest test tfplan.json --policy policy/
 ```
 
@@ -110,11 +110,11 @@ resource "aws_db_instance" "this" {
 
 <a id="secret-string-state-caveat"></a>
 
-> **Note — data source `secret_string` persists to state:** The `aws_secretsmanager_secret_version` data source reads `secret_string` into Terraform state during refresh. `password_wo` (AWS provider v5.71+, Terraform 1.11+) keeps the **resource argument** out of state, but the data source still persists the value. For true state exclusion:
+> **Note — data source `secret_string` persists to state:** The `aws_secretsmanager_secret_version` data source reads `secret_string` into OpenTofu state during refresh. `password_wo` (AWS provider v5.71+, runtime 1.11+) keeps the **resource argument** out of state, but the data source still persists the value. For true state exclusion:
 >
 > - Prefer `manage_master_user_password = true` (AWS-managed, for RDS)
-> - Use `ephemeral` providers/resources (Terraform 1.10+)
-> - Inject via CI environment variable outside Terraform
+> - Use `ephemeral` providers/resources (1.10+)
+> - Inject via CI environment variable outside OpenTofu
 >
 > Examples below use the data-source pattern; apply one of the alternatives above when the value must not land in state.
 
@@ -289,14 +289,14 @@ resource "aws_security_group_rule" "web_https_ingress" {
 
 ## Compliance Testing
 
-### Policy-as-code for Terraform plans
+### Policy-as-code for OpenTofu plans
 
 Generate a plan JSON and evaluate it with a policy engine. The modern, actively-maintained options are Conftest (OPA/Rego) and Open Policy Agent directly. The `terraform-compliance` BDD project is archived and no longer maintained; prefer Conftest/OPA for new work.
 
 ```bash
 # Generate plan JSON
-terraform plan -out=tfplan
-terraform show -json tfplan > tfplan.json
+tofu plan -out=tfplan
+tofu show -json tfplan > tfplan.json
 
 # Evaluate with Conftest (OPA under the hood)
 conftest test tfplan.json --policy policy/
@@ -306,7 +306,7 @@ conftest test tfplan.json --policy policy/
 
 ```rego
 # policy/s3_encryption.rego
-package terraform.s3
+package opentofu.s3
 
 # AWS provider v4+ moved S3 encryption to the separate
 # aws_s3_bucket_server_side_encryption_configuration resource.
@@ -357,7 +357,7 @@ deny[msg] {
 
 ### AWS Secrets Manager Pattern
 
-See the [data-source `secret_string` persistence caveat](#secret-string-state-caveat) above — both `random_password.result` and data-source reads of `secret_string` land in Terraform state. The recommended RDS pattern avoids both.
+See the [data-source `secret_string` persistence caveat](#secret-string-state-caveat) above — both `random_password.result` and data-source reads of `secret_string` land in OpenTofu state. The recommended RDS pattern avoids both.
 
 ```hcl
 # Recommended: let RDS generate and manage the master password in Secrets Manager
@@ -372,14 +372,14 @@ resource "aws_db_instance" "this" {
   manage_master_user_password   = true
   master_user_secret_kms_key_id = aws_kms_key.db.arn
 
-  # Option 2 (Terraform 1.11+ + AWS provider v5.71+): write-only password
+  # Option 2 (OpenTofu 1.11+ + AWS provider v5.71+): write-only password
   # password_wo         = ephemeral.random_password.db.result
   # password_wo_version = 1
   # ...
 }
 ```
 
-If you need a manually-managed secret for a non-RDS consumer, keep the value out of state by sourcing it outside Terraform (CI env var, ephemeral resource, or a write-only argument) rather than via `random_password` + a `data` lookup:
+If you need a manually-managed secret for a non-RDS consumer, keep the value out of state by sourcing it outside OpenTofu (CI env var, ephemeral resource, or a write-only argument) rather than via `random_password` + a `data` lookup:
 
 ```hcl
 # Only use this shape when the consumer cannot use manage_master_user_password
@@ -426,12 +426,12 @@ terraform {
     region       = "us-east-1"
     encrypt      = true                                             # Enables SSE on PUT
     kms_key_id   = "arn:aws:kms:us-east-1:ACCOUNT:key/KEY-ID"       # Customer-managed CMK
-    use_lockfile = true                                             # Terraform 1.10+
+    use_lockfile = true                                             # OpenTofu 1.10+
   }
 }
 ```
 
-> **`encrypt = true` alone is SSE-S3 (AWS-managed AES-256 key, no per-request CloudTrail audit trail).** State often holds secrets, so pair `encrypt = true` with `kms_key_id` pointing at a customer-managed CMK. `use_lockfile = true` (Terraform 1.10+) replaces the need for a DynamoDB lock table.
+> **`encrypt = true` alone is SSE-S3 (AWS-managed AES-256 key, no per-request CloudTrail audit trail).** State often holds secrets, so pair `encrypt = true` with `kms_key_id` pointing at a customer-managed CMK. `use_lockfile = true` (OpenTofu 1.10+) replaces the need for a DynamoDB lock table.
 
 ### Secure State Bucket
 
@@ -451,7 +451,7 @@ resource "aws_s3_bucket_versioning" "terraform_state" {
 
 # Enable encryption — customer-managed KMS CMK with bucket key to control request costs
 resource "aws_kms_key" "terraform_state" {
-  description             = "KMS CMK for Terraform state bucket"
+  description             = "KMS CMK for OpenTofu state bucket"
   enable_key_rotation     = true
   deletion_window_in_days = 30
 }
@@ -492,7 +492,7 @@ resource "aws_s3_bucket_public_access_block" "terraform_state" {
       "Sid": "AllowListBucket",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::123456789012:role/TerraformRole"
+        "AWS": "arn:aws:iam::123456789012:role/OpenTofuRole"
       },
       "Action": "s3:ListBucket",
       "Resource": "arn:aws:s3:::my-terraform-state"
@@ -501,7 +501,7 @@ resource "aws_s3_bucket_public_access_block" "terraform_state" {
       "Sid": "AllowObjectRW",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "arn:aws:iam::123456789012:role/TerraformRole"
+        "AWS": "arn:aws:iam::123456789012:role/OpenTofuRole"
       },
       "Action": [
         "s3:GetObject",

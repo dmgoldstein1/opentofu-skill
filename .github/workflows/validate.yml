@@ -44,7 +44,7 @@ jobs:
 
           print("🔍 Validating SKILL.md frontmatter...")
 
-          with open('skills/terraform-skill/SKILL.md', 'r') as f:
+          with open('skills/opentofu-skill/SKILL.md', 'r') as f:
               content = f.read()
 
           if not content.startswith('---'):
@@ -111,7 +111,7 @@ jobs:
               print("ℹ️  No .codex-plugin/plugin.json; skipping sync check")
               sys.exit(0)
 
-          with open('skills/terraform-skill/SKILL.md') as f:
+          with open('skills/opentofu-skill/SKILL.md') as f:
               fm = yaml.safe_load(f.read().split('---', 2)[1])
           skill_version = (fm.get('metadata') or {}).get('version')
 
@@ -142,8 +142,8 @@ jobs:
 
       - name: Check File Size
         run: |
-          LINES=$(wc -l < skills/terraform-skill/SKILL.md)
-          WORDS=$(wc -w < skills/terraform-skill/SKILL.md)
+          LINES=$(wc -l < skills/opentofu-skill/SKILL.md)
+          WORDS=$(wc -w < skills/opentofu-skill/SKILL.md)
           echo "📊 SKILL.md: $LINES lines, $WORDS words"
           if [ $LINES -gt 500 ]; then
             echo "⚠️  WARNING: $LINES lines (guideline: <500)"
@@ -154,7 +154,7 @@ jobs:
       - name: Check for Broken Links
         run: |
           echo "🔍 Checking internal links..."
-          cd skills/terraform-skill
+          cd skills/opentofu-skill
           broken=0
           while read -r link; do
             if [ ! -f "$link" ]; then

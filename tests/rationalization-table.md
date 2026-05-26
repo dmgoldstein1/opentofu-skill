@@ -116,7 +116,7 @@ These entries capture the verbatim excuses agents use for scenarios 1–8. They 
 **Scenario:** Choosing Testing Framework (§2)
 
 **Full context:**
-> "For testing Terraform modules, I recommend Terratest. It's the industry standard for Terraform testing."
+> "For testing OpenTofu modules, I recommend Terratest. It's the industry standard for infrastructure testing."
 
 **Why it's a problem:**
 - Ignores version-specific features (native tests 1.6+)
@@ -132,7 +132,7 @@ These entries capture the verbatim excuses agents use for scenarios 1–8. They 
 
 | Factor | Impact on Choice |
 |--------|------------------|
-| Terraform/OpenTofu version | <1.6: external tools only; 1.6+: native tests available; 1.7+: mocking available |
+| OpenTofu version | <1.6: external tools only; 1.6+: native tests available; 1.7+: mocking available |
 | Team expertise | Go experience → Terratest more accessible |
 | Cost sensitivity | Cloud costs → prefer mocking or static analysis |
 | Module complexity | Simple → native tests; Complex integration → Terratest |
@@ -165,8 +165,8 @@ These entries capture the verbatim excuses agents use for scenarios 1–8. They 
 **Syntax validation is insufficient.** Every review must include:
 
 1. **Syntax & Format**
-   - `terraform validate`
-   - `terraform fmt -check`
+  - `tofu validate`
+  - `tofu fmt -check`
 
 2. **Security Scan** (REQUIRED)
    - `trivy config .`
@@ -186,17 +186,17 @@ These entries capture the verbatim excuses agents use for scenarios 1–8. They 
 
 ---
 
-### R4: "These are common terraform patterns"
+### R4: "These are common IaC patterns"
 
 **Scenario:** Naming Convention Violations (§4)
 
 **Full context:**
-> "I've created the resources using common Terraform patterns like `resource 'aws_instance' 'this'`."
+> "I've created the resources using common IaC patterns like `resource 'aws_instance' 'this'`."
 
 **Why it's a problem:**
 - "Common" doesn't mean "good"
 - Generic names reduce code readability
-- Anti-pattern from old Terraform codebases
+- Anti-pattern from older IaC codebases
 
 **Counter-rationalization to add to SKILL.md:**
 
@@ -221,7 +221,7 @@ These entries capture the verbatim excuses agents use for scenarios 1–8. They 
 - Multiple with "this": `resource "aws_subnet" "this" {}` (when creating multiple subnets)
 - Singleton with "main": `resource "aws_vpc" "main" {}` (outdated pattern)
 
-These patterns exist in old Terraform code but violate modern best practices.
+These patterns exist in older codebases but violate modern best practices.
 
 ✅ **Always use descriptive, contextual names** that reflect resource purpose
 ```

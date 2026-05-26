@@ -1,9 +1,9 @@
 # Module Development Patterns
 
 > **Part of:** [terraform-skill](../SKILL.md)
-> **Purpose:** Best practices for Terraform/OpenTofu module development
+> **Purpose:** Best practices for OpenTofu module development
 
-This document provides detailed guidance on creating reusable, maintainable Terraform modules. For high-level principles, see the [main skill file](../SKILL.md#core-principles).
+This document provides detailed guidance on creating reusable, maintainable OpenTofu modules. For high-level principles, see the [main skill file](../SKILL.md#core-principles).
 
 ---
 
@@ -144,7 +144,7 @@ Question 3: Is it a focused group of related resources?
 main.tf        # Resource definitions, module calls, data sources
 variables.tf   # Input variable declarations
 outputs.tf     # Output value declarations
-versions.tf    # Provider and Terraform version constraints
+versions.tf    # Provider and OpenTofu version constraints
 README.md      # Usage documentation
 ```
 
@@ -156,7 +156,7 @@ data.tf           # Optional: Data sources (if main.tf gets large)
 backend.tf        # ONLY at composition level (remote state config)
 ```
 
-Required structure for Terraform Registry publishing; keeps navigation consistent across modules.
+Required structure for registry publishing; keeps navigation consistent across modules.
 
 ---
 
@@ -196,8 +196,8 @@ terraform {
     key          = "prod/networking/terraform.tfstate"
     region       = "us-east-1"
     encrypt      = true
-    use_lockfile = true   # Terraform 1.10+; native S3 locking
-    # Pre-1.10 runtime: use dynamodb_table = "terraform-locks" instead
+    use_lockfile = true   # OpenTofu 1.10+; native S3 locking
+    # Older runtime: use the legacy backend locking option instead
   }
 }
 ```
@@ -328,7 +328,7 @@ module "vpc" {
 
   tags = {
     Environment = "production"
-    ManagedBy   = "Terraform"
+    ManagedBy   = "OpenTofu"
     CostCenter  = "engineering"
   }
 }
@@ -390,7 +390,7 @@ my-module/
 - ❌ Private internal modules / environment-specific configs — optional
 - ❌ Do NOT store LICENSE templates in this skill; generate them on demand from user preference
 
-### Terraform vs OpenTofu Preference
+### OpenTofu Runtime Preference
 
 HCL is identical; choice affects commands, README, CI invocations, binary references only. Ask before generating if not specified.
 
@@ -450,7 +450,7 @@ variable "enable_monitoring" {
 - ✅ **Use explicit `type` constraints** - Catches errors early
 - ✅ **Provide sensible `default` values** - Where appropriate
 - ✅ **Add `validation` blocks** - For complex constraints
-- ✅ **Use `sensitive = true`** - For secrets (Terraform 0.14+)
+- ✅ **Use `sensitive = true`** - For secrets (OpenTofu 0.14+)
 
 ### Variable Naming
 
@@ -589,7 +589,7 @@ locals {
     var.tags,
     {
       Environment = var.environment
-      ManagedBy   = "Terraform"
+      ManagedBy   = "OpenTofu"
     }
   )
 
@@ -707,7 +707,7 @@ Use module outputs when possible. Reserve remote state for ownership boundaries 
 
 ### Public Modules
 
-Follow the Terraform Registry convention:
+Follow the registry naming convention:
 
 ```
 terraform-<PROVIDER>-<NAME>
@@ -736,10 +736,10 @@ acme-terraform-aws-rds
 
 Before publishing or handing off a reusable module:
 
-- [ ] Runtime and provider choice explicit (Terraform vs OpenTofu, version floor in `required_version`)
+- [ ] Runtime and provider choice explicit (OpenTofu version floor in `required_version`)
 - [ ] Public vs private scope decided (affects naming + license)
 - [ ] `examples/` directory with at least `minimal` and `complete`
-- [ ] Tests written (native `terraform test` on 1.6+, or Terratest) — see [testing-frameworks.md](testing-frameworks.md)
+- [ ] Tests written (native `tofu test` on 1.6+, or Terratest) — see [testing-frameworks.md](testing-frameworks.md)
 - [ ] README documents all inputs/outputs (Description → Usage → Inputs → Outputs → Requirements)
 - [ ] Module source pinned with `version` in consumer code
 - [ ] `pre-commit-terraform` hooks configured (`terraform_fmt`, `terraform_validate`, `terraform_tflint`, `terraform_docs`), pinned to a specific `rev`

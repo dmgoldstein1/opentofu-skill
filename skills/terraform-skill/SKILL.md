@@ -1,31 +1,31 @@
 ---
-name: terraform-skill
-description: Use when writing, reviewing, or debugging Terraform/OpenTofu modules, tests, CI, scans, or state ops - diagnoses failure mode (identity churn, secrets, blast radius, CI drift, state corruption) with version-aware guards.
+name: opentofu-skill
+description: Use when writing, reviewing, or debugging OpenTofu modules, tests, CI, scans, or state ops on macOS or Linux - diagnoses failure mode (identity churn, secrets, blast radius, CI drift, state corruption) with version-aware guards.
 license: Apache-2.0
 metadata:
   author: Anton Babenko
   version: 1.16.0
 ---
 
-# Terraform Skill for Claude
+# OpenTofu Skill for Skills-Compatible Agents
 
-Diagnose-first guidance for Terraform and OpenTofu. Core file is a workflow; depth lives in references loaded on demand.
+Diagnose-first guidance for OpenTofu on macOS and Linux. Core file is a workflow; depth lives in references loaded on demand.
 
 ## Response Contract
 
-Every Terraform/OpenTofu response must include:
+Every OpenTofu response must include:
 
-1. **Assumptions & version floor** — runtime (`terraform` or `tofu`), exact version, providers, state backend, execution path (local/CI/Cloud/Atlantis), environment criticality. State assumptions explicitly if the user did not provide them.
+1. **Assumptions & version floor** — exact `tofu` version, providers, state backend, execution path (local/CI/Cloud/Atlantis), environment criticality, and host OS (`macOS` or `Linux`). State assumptions explicitly if the user did not provide them.
 2. **Risk category addressed** — one or more of: identity churn, secret exposure, blast radius, CI drift, compliance gaps, state corruption, provider upgrade risk, testing blind spots.
 3. **Chosen remediation & tradeoffs** — what was chosen, what was traded off, why.
-4. **Validation plan** — exact commands (`fmt -check`, `validate`, `plan -out`, policy check) tailored to runtime and risk tier.
+4. **Validation plan** — exact `tofu` commands (`fmt -check`, `validate`, `plan -out`, policy check) tailored to the risk tier.
 5. **Rollback notes** — for any destructive or state-mutating change: how to undo, what evidence to keep.
 
 Never recommend direct production apply without a reviewed plan artifact and approval.
 
 ## Workflow
 
-1. **Capture execution context** — runtime+version, provider(s), backend, execution path, environment criticality.
+1. **Capture execution context** — OpenTofu version, provider(s), backend, execution path, environment criticality, host OS.
 2. **Diagnose failure mode(s)** using the routing table below. If intent spans categories, load both references.
 3. **Load only the matching reference file(s)** — do not preload depth the task does not need.
 4. **Propose fix with risk controls** — why this addresses the mode, what could still go wrong, guardrails (tests/approvals/rollback).
@@ -52,9 +52,9 @@ Never recommend direct production apply without a reviewed plan artifact and app
 
 ## When to Use This Skill
 
-**Activate when:** creating or reviewing Terraform/OpenTofu configurations or modules, setting up or debugging tests, structuring multi-environment deployments, implementing IaC CI/CD, choosing module patterns or state organization, configuring or migrating remote state backends.
+**Activate when:** creating or reviewing OpenTofu configurations or modules on macOS or Linux, setting up or debugging tests, structuring multi-environment deployments, implementing IaC CI/CD, choosing module patterns or state organization, or configuring or migrating remote state backends.
 
-**Don't use for:** basic HCL syntax questions Claude already knows, provider API reference (link to docs), cloud-platform questions unrelated to Terraform/OpenTofu.
+**Don't use for:** non-OpenTofu IaC workflows, Windows-specific setup or shell guidance, basic HCL syntax questions the host model already handles, provider API reference (link to docs), or cloud-platform questions unrelated to OpenTofu.
 
 ## Core Principles
 
@@ -104,7 +104,7 @@ See [Code Patterns: Block Ordering & Structure](references/code-patterns.md#bloc
 |-----------|----------|-------|------|
 | Quick syntax check | Static analysis | `validate`, `fmt` | Free |
 | Pre-commit validation | Static + lint | `validate`, `tflint`, `trivy`, `checkov` | Free |
-| Terraform 1.6+, simple logic | Native test framework | `terraform test` | Free-Low |
+| OpenTofu 1.6+, simple logic | Native test framework | `tofu test` | Free-Low |
 | Pre-1.6, or Go expertise | Integration testing | Terratest | Low-Med |
 | Security/compliance focus | Policy as code | OPA, Sentinel | Free |
 | Cost-sensitive workflow | Mock providers (1.7+) | Native tests + mocks | Free |
@@ -112,7 +112,7 @@ See [Code Patterns: Block Ordering & Structure](references/code-patterns.md#bloc
 
 ### Native Test Rules (1.6+)
 
-Before writing test code: validate resource schemas via Terraform MCP so assertions target real attributes.
+Before writing test code: validate resource schemas via provider documentation so assertions target real attributes.
 
 - `command = plan` — fast, for input-derived values only
 - `command = apply` — required for **computed values** (ARNs, generated names) and **set-type nested blocks**
@@ -185,7 +185,7 @@ checkov -d .
 
 **Do:** source secrets from a cloud secret manager (AWS Secrets Manager / Azure Key Vault / GCP Secret Manager) or use `write_only` arguments on 1.11+, create dedicated VPCs, enforce encryption at rest and TLS, least-privilege SGs, use separate `aws_vpc_security_group_{ingress,egress}_rule` resources (e.g. AWS provider v5+).
 
-Marking a variable `sensitive = true` masks display only — the value still lives in state. Use `write_only` / `*_wo` on 1.11+, or keep secret material out of Terraform entirely via runtime lookups.
+Marking a variable `sensitive = true` masks display only — the value still lives in state. Use `write_only` / `*_wo` on 1.11+, or keep secret material out of OpenTofu entirely via runtime lookups.
 
 See [Security & Compliance](references/security-compliance.md) for trivy/checkov pipelines, state-file hardening, compliance mappings, and the LLM-mistake checklist.
 
@@ -209,7 +209,7 @@ terraform {
 }
 ```
 
-On Terraform < 1.10, use `dynamodb_table = "terraform-state-lock"` instead of `use_lockfile`. Azure Storage, GCS, and Terraform Cloud all offer built-in locking - see the State Management reference for syntax. For choosing among backends and their locking models, see [Choosing a Remote Backend](references/state-management.md#choosing-a-remote-backend).
+If your target OpenTofu runtime does not support `use_lockfile`, use the backend-specific legacy locking option documented in the State Management reference. Azure Storage, GCS, and hosted backends offer built-in locking - see [Choosing a Remote Backend](references/state-management.md#choosing-a-remote-backend).
 
 ### State Organization
 
@@ -227,14 +227,14 @@ See [State Management](references/state-management.md) for locking, migration, m
 
 | Component | Strategy | Example |
 |-----------|----------|---------|
-| Terraform runtime | Pin minor | `required_version = "~> 1.9"` |
+| OpenTofu runtime | Pin minor | `required_version = "~> 1.9"` |
 | Providers | Pin major | `version = "~> 5.0"` |
 | Modules (prod) | Pin exact | `version = "5.1.2"` |
 | Modules (dev) | Allow patch | `version = "~> 5.1"` |
 
 Commit `.terraform.lock.hcl` intentionally. Keep provider/runtime upgrades in a separate PR from functional changes. See [Code Patterns: Version Management](references/code-patterns.md#version-management) for constraint syntax and upgrade workflow.
 
-## Modern Terraform Features (1.0+)
+## Modern OpenTofu Features
 
 | Feature | Min version | Common use |
 |---------|-------------|------------|
@@ -244,7 +244,7 @@ Commit `.terraform.lock.hcl` intentionally. Keep provider/runtime upgrades in a 
 | `optional()` with defaults | 1.3+ | Typed object attributes |
 | `import` blocks | 1.5+ | Declarative imports, reviewable in VCS |
 | `check` blocks | 1.5+ | Runtime assertions |
-| Native `terraform test` | 1.6+ | Built-in test framework |
+| Native `tofu test` | 1.6+ | Built-in test framework |
 | Mock providers | 1.7+ | Cost-free unit testing |
 | `removed` blocks | 1.7+ | Declarative resource removal |
 | Provider-defined functions | 1.8+ | Provider-specific transformations (requires provider to declare functions) |
@@ -256,22 +256,21 @@ Before emitting a feature, verify the runtime floor. See [Code Patterns: Feature
 
 ## Runtime-Specific Guidance
 
-- **Terraform 1.0-1.5 (OpenTofu starts at 1.6)**: Terratest for integration, static analysis + plan validation only (no native tests).
-- **1.6+**: native `terraform test` / `tofu test` available — migrate simple unit tests, keep Terratest for complex integration.
+- **1.6+**: native `tofu test` is available — migrate simple unit tests, keep Terratest for complex integration.
 - **1.7+**: mock providers cut test cost — mock for unit tests, real runs for final integration.
-- **1.10+**: S3 native lock-file (`use_lockfile`) is the correct default for new configurations — DynamoDB locking is no longer required.
+- **1.10+**: S3 native lock-file (`use_lockfile`) is the correct default for new configurations.
 - **1.11+**: `write_only` arguments for secret handling keep credentials out of state.
-- **Terraform vs OpenTofu**: both supported. For licensing, governance, and feature delta, see [Quick Reference: Terraform vs OpenTofu](references/quick-reference.md#terraform-vs-opentofu-comparison).
+- **macOS/Linux only**: use POSIX shell commands and package-install guidance that works on macOS or Linux; do not emit Windows setup steps.
 
-## Code Intelligence (terraform-ls)
+## Code Intelligence (HCL LSP)
 
-Semantic navigation for HCL. terraform-ls is optional; without it every row below degrades to a disclosed `rg` + Read fallback.
+Semantic navigation for HCL. Use the HCL language server tooling available in the environment; without it every row below degrades to a disclosed `rg` + Read fallback.
 
-Self-contained terraform-ls layer of a generic code-intelligence discipline - apply the rows below directly. Recommended companion: the `code-intelligence` plugin (same `antonbabenko/agent-plugins` marketplace) carries the generic discipline (position anchoring, degradation gate, disclosure format, anti-phantom-shim) and ships `/code-intelligence:doctor` for readiness. If it is installed, defer to its generic protocol; this skill stays fully self-contained without it.
+This section stays self-contained: apply the matrix below directly. Recommended companion: the `code-intelligence` plugin (same `antonbabenko/agent-plugins` marketplace) carries the generic discipline (position anchoring, degradation gate, disclosure format, anti-phantom-shim) and ships `/code-intelligence:doctor` for readiness. If it is installed, defer to its generic protocol.
 
 | Goal | Use | Tradeoff |
 |------|-----|----------|
-| Find definition / all references | terraform-ls `goToDefinition` / `findReferences` | Needs `init` + a position anchor |
+| Find definition / all references | HCL language server `goToDefinition` / `findReferences` | Needs `init` + a position anchor |
 | Rename value symbol (var/local/output/provider alias) | Manual: `findReferences` -> per-file fresh Read -> edit -> `validate` | No rename provider |
 | Rename resource/module address | `moved` block + `plan` shows 0 destroy | Text rename forces destroy/recreate |
 | Exact text / known name / `.tfvars` / non-HCL | `rg` + Read | No semantic scope |
@@ -279,7 +278,7 @@ Self-contained terraform-ls layer of a generic code-intelligence discipline - ap
 ✅ Supported: `goToDefinition`, `findReferences`, `documentSymbol`, `hover`, `workspaceSymbol`.
 ❌ Unsupported: `goToImplementation`, call hierarchy, rename provider. Do not call these then report their absence as a finding.
 
-- ✅ Prereq: local `terraform`/`tofu` on PATH, `terraform init` run; cold start may need one retry.
+- ✅ Prereq: local `tofu` on PATH, `tofu init` run; cold start may need one retry.
 - ✅ LSP calls are position-anchored (`file:line:character`) - anchor with `rg` first, never symbol-name-only.
 - ❌ Do not claim "LSP broken, using rg" until the [Degradation Gate](references/code-intelligence-lsp.md#degradation-gate) passes; disclose any tool substitution on the first line.
 
@@ -295,7 +294,7 @@ Progressive disclosure — essentials here, depth on demand:
 - [Security & Compliance](references/security-compliance.md) — trivy/checkov, secrets handling, compliance mappings
 - [State Management](references/state-management.md) — backends, locking, migration, multi-team, recovery
 - [Code Patterns](references/code-patterns.md) — block ordering, `count`/`for_each` deep dive, modern features, version management, locals
-- [Code Intelligence](references/code-intelligence-lsp.md) - terraform-ls capabilities, position-anchored calls, manual rename, degradation gate
+- [Code Intelligence](references/code-intelligence-lsp.md) - HCL language-server capabilities, position-anchored calls, manual rename, degradation gate
 - [Quick Reference](references/quick-reference.md) — command cheat sheets, flowcharts, troubleshooting
 
 ## License

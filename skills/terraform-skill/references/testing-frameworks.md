@@ -1,7 +1,7 @@
 # Testing Frameworks - Detailed Guide
 
 > **Part of:** [terraform-skill](../SKILL.md)
-> **Purpose:** Detailed guides for Terraform/OpenTofu testing frameworks
+> **Purpose:** Detailed guides for OpenTofu testing frameworks on macOS and Linux
 
 This document provides in-depth guidance on testing frameworks for Infrastructure as Code. For the decision matrix and high-level overview, see the [main skill file](../SKILL.md#testing-strategy).
 
@@ -11,7 +11,7 @@ This document provides in-depth guidance on testing frameworks for Infrastructur
 
 1. [Static Analysis](#static-analysis)
 2. [Plan Testing](#plan-testing)
-3. [Native Terraform Tests](#native-terraform-tests)
+3. [Native OpenTofu Tests](#native-opentofu-tests)
 4. [Terratest (Go-based)](#terratest-go-based)
 
 ---
@@ -33,8 +33,8 @@ This document provides in-depth guidance on testing frameworks for Infrastructur
 
 ### What Each Tool Checks
 
-- **`terraform fmt`** - Code formatting consistency
-- **`terraform validate`** - Syntax and internal consistency
+- **`tofu fmt`** - Code formatting consistency
+- **`tofu validate`** - Syntax and internal consistency
 - **`TFLint`** - Best practices, provider-specific rules
 - **`trivy` / `checkov`** - Security vulnerabilities
 
@@ -46,7 +46,7 @@ Every commit, always. Zero cost, catches 40%+ of issues.
 
 ## Plan Testing
 
-### What terraform plan Validates
+### What tofu plan Validates
 
 - Verify expected resources will be created/modified/destroyed
 - Catch provider authentication issues
@@ -56,11 +56,11 @@ Every commit, always. Zero cost, catches 40%+ of issues.
 ### In CI/CD
 
 ```bash
-terraform init
-terraform plan -out=tfplan
+tofu init
+tofu plan -out=tfplan
 
 # Optionally: Convert plan to JSON and validate with tools
-terraform show -json tfplan | jq '.'
+tofu show -json tfplan | jq '.'
 ```
 
 ### Limitations
@@ -71,9 +71,9 @@ terraform show -json tfplan | jq '.'
 
 ---
 
-## Native Terraform Tests
+## Native OpenTofu Tests
 
-**Available:** Terraform 1.6+, OpenTofu 1.6+
+**Available:** OpenTofu 1.6+
 
 ### When to Use
 
@@ -83,7 +83,7 @@ terraform show -json tfplan | jq '.'
 
 ### Basic Structure
 
-> **Test discovery:** `terraform test` finds `*.tftest.hcl` files under `tests/` relative to the module root. Use `-filter=<path>` to scope to a specific file.
+> **Test discovery:** `tofu test` finds `*.tftest.hcl` files under `tests/` relative to the module root. Use `-filter=<path>` to scope to a specific file.
 
 ```hcl
 # tests/s3_bucket.tftest.hcl
@@ -110,22 +110,13 @@ run "verify_encryption" {
 
 ### Critical: Validate Resource Schemas First
 
-**Always use Terraform MCP to validate resource schemas before writing tests:**
+**Always validate resource schemas against provider documentation or schema tooling before writing tests:**
 
 ```bash
-# Example workflow in Claude Code:
-# 1. Search for provider documentation
-mcp__terraform__search_providers({
-  provider_name: "aws",
-  provider_namespace: "hashicorp",
-  service_slug: "s3_bucket_server_side_encryption_configuration",
-  provider_document_type: "resources"
-})
-
-# 2. Get detailed schema
-mcp__terraform__get_provider_details({
-  provider_doc_id: "12345"  # from search results
-})
+# Example workflow:
+# 1. Open the provider resource documentation.
+# 2. Verify whether nested blocks are sets, lists, or computed attributes.
+# 3. Write assertions only after confirming the schema.
 ```
 
 Block-type distinctions the LLM must verify against the real schema:
@@ -245,7 +236,7 @@ mock_provider "aws" {
 
 ### Pros
 
-- Native HCL syntax (familiar to Terraform users)
+- Native HCL syntax (familiar to OpenTofu users)
 - No external dependencies
 - Fast execution with mocks
 - Good for unit testing module logic
@@ -484,9 +475,9 @@ stage(t, "teardown", func() {
 ### Framework Selection
 
 ```
-Quick syntax check? → terraform validate + fmt
+Quick syntax check? → tofu validate + fmt
 Security scan? → trivy + checkov
-Terraform 1.6+, simple logic? → Native tests
+OpenTofu 1.6+, simple logic? → Native tests
 Complex integration or multi-cloud orchestration? → Terratest
 ```
 
@@ -508,8 +499,8 @@ Common model mistakes when generating test code:
 - indexes set-type nested blocks with `[0]` — sets are unordered, use `for` expressions or `command = apply` to materialize
 - treats mocked-provider tests as integration coverage — mocks validate logic only, not provider behavior
 - forgets to exercise `validation` blocks with invalid inputs — only tests the happy path
-- skips idempotency (`terraform plan -detailed-exitcode` after apply) — the most common regression detector
-- asserts on Terraform syntax instead of module behavior (`terraform validate` already covers syntax)
+- skips idempotency (`tofu plan -detailed-exitcode` after apply) — the most common regression detector
+- asserts on syntax instead of module behavior (`tofu validate` already covers syntax)
 - runs expensive real-cloud integration tests on every commit instead of gating them behind main/scheduled
 - omits cleanup, leaving orphaned resources billed against the test account
 

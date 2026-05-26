@@ -1,6 +1,6 @@
-# Contributing to Terraform Skill
+# Contributing to OpenTofu Skill
 
-Thanks for helping improve terraform-skill. Guidelines for contributors below.
+Thanks for helping improve the OpenTofu skill. The repository path still uses `terraform-skill` during the rename; contributor guidance below follows the OpenTofu identity.
 
 ## Quick Start
 
@@ -14,8 +14,8 @@ Thanks for helping improve terraform-skill. Guidelines for contributors below.
 
 **Good contributions:**
 
-- ✅ New Terraform/OpenTofu best practices with community consensus
-- ✅ Version-specific features for new Terraform/OpenTofu releases
+- ✅ New OpenTofu best practices with community consensus
+- ✅ Version-specific features for new OpenTofu releases
 - ✅ Corrections to outdated or incorrect information
 - ✅ Better examples or patterns
 - ✅ Sharper organization or clarity
@@ -24,9 +24,9 @@ Thanks for helping improve terraform-skill. Guidelines for contributors below.
 **Not suitable:**
 
 - ❌ Personal preferences without community consensus
-- ❌ Provider-specific resource details (use Terraform MCP tools instead)
+- ❌ Provider-specific resource details (use provider documentation or MCP tools instead)
 - ❌ Untested changes (see TDD requirement below)
-- ❌ Content that duplicates existing Claude knowledge
+- ❌ Content that duplicates widely known base model OpenTofu knowledge
 
 ## Content Standards
 
@@ -50,12 +50,12 @@ Current frontmatter:
 
 ```yaml
 ---
-name: terraform-skill
+name: opentofu-skill
 description: >-
-  Use when writing, reviewing, or debugging Terraform/OpenTofu modules,
-  tests, CI, scans, or state ops — diagnoses failure mode (identity
-  churn, secrets, blast radius, CI drift, state corruption) with
-  version-aware guards.
+  Use when writing, reviewing, or debugging OpenTofu modules, tests,
+  CI, scans, or state ops on macOS or Linux — diagnoses failure mode
+  (identity churn, secrets, blast radius, CI drift, state
+  corruption) with version-aware guards.
 license: Apache-2.0
 metadata:
   author: Anton Babenko
@@ -73,16 +73,16 @@ Start with "Use when..." and list specific triggers.
 
 ```yaml
 description: >-
-  Use when writing, reviewing, or debugging Terraform/OpenTofu modules,
-  tests, CI, scans, or state ops — diagnoses failure mode (identity
-  churn, secrets, blast radius, CI drift, state corruption) with
-  version-aware guards.
+  Use when writing, reviewing, or debugging OpenTofu modules, tests,
+  CI, scans, or state ops on macOS or Linux — diagnoses failure mode
+  (identity churn, secrets, blast radius, CI drift, state
+  corruption) with version-aware guards.
 ```
 
 **Bad example:**
 
 ```yaml
-description: Comprehensive skill for Terraform development covering testing, modules, CI/CD, and production patterns
+description: Comprehensive skill for OpenTofu development covering testing, modules, CI/CD, and production patterns
 ```
 
 The description must focus on WHEN to use (triggers, symptoms), not WHAT the skill does. See writing-skills documentation for rationale.
@@ -118,7 +118,7 @@ Reviewers reject PRs that violate these.
 ```text
 terraform-skill/
 ├── skills/
-│   └── terraform-skill/            # Autodiscovered by Claude Code plugin system
+│   └── opentofu-skill/             # Autodiscovered by Claude Code plugin system
 │       ├── SKILL.md                # Core skill (~305 lines)
 │       └── references/             # Reference files (progressive disclosure)
 │           ├── ci-cd-workflows.md
@@ -137,6 +137,8 @@ terraform-skill/
     ├── automated-release.yml
     └── validate.yml
 ```
+
+The on-disk path above is retained temporarily for compatibility with existing installers and references; user-facing content should use the OpenTofu identity.
 
 ## Testing Requirements (CRITICAL)
 
@@ -169,7 +171,7 @@ Example: adding security scanning guidance → affects Scenario 3.
 
 ```bash
 # Disable skill temporarily
-/plugin disable terraform-skill@antonbabenko
+/plugin disable opentofu-skill@antonbabenko
 
 # Run affected scenario
 # Document agent response in tests/baseline-results/
@@ -183,7 +185,7 @@ Edit SKILL.md or reference files.
 
 ```bash
 # Re-enable skill
-/plugin enable terraform-skill@antonbabenko
+/plugin enable opentofu-skill@antonbabenko
 
 # Run same scenario
 # Document improved behavior in tests/compliance-results/
@@ -237,7 +239,7 @@ Include this checklist on every PR:
 **Version-specific markers:**
 
 ```markdown
-**Native Tests** (Terraform 1.6+, OpenTofu 1.6+)
+**Native Tests** (OpenTofu 1.6+)
 ```
 
 ### Code Examples
@@ -271,7 +273,7 @@ Include WHEN information:
 ```markdown
 | Your Situation | Recommended Approach |
 |----------------|---------------------|
-| Terraform 1.6+, simple logic | Native tests |
+| OpenTofu 1.6+, simple logic | Native tests |
 | Complex integration or multi-cloud | Terratest |
 ```
 
@@ -316,7 +318,7 @@ git commit -m "feat!: remove deprecated test framework guidance"
 # With detailed description
 git commit -m "feat: add native testing examples
 
-- Add examples for Terraform 1.6+ native tests
+- Add examples for OpenTofu 1.6+ native tests
 - Include decision matrix for test framework selection
 - Document best practices for test organization"
 
@@ -377,12 +379,10 @@ PRs are reviewed for:
 Releases are automated from conventional commits:
 
 1. PR merged to `master`
-2. Workflow analyzes commits since the last release
-3. Workflow calculates the version bump (major/minor/patch)
-4. Workflow updates:
-   - `skills/terraform-skill/SKILL.md` frontmatter (`metadata.version`)
-   - `CHANGELOG.md` (generated from commits)
-5. Workflow creates the git tag and GitHub Release
+1. Workflow analyzes commits since the last release
+1. Workflow calculates the version bump (major/minor/patch)
+1. Workflow updates `skills/opentofu-skill/SKILL.md` frontmatter (`metadata.version`) and `CHANGELOG.md` (generated from commits)
+1. Workflow creates the git tag and GitHub Release
 
 Contributors don't manage versions — conventional commits in your PRs are enough.
 

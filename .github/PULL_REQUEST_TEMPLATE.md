@@ -73,7 +73,7 @@ Improvements:
 ### Token Efficiency
 
 - [ ] SKILL.md stays lean (soft target ~300 lines; CI warns only above 500)
-- [ ] Detailed content moved to skills/terraform-skill/references/*.md where appropriate
+- [ ] Detailed content moved to skills/opentofu-skill/references/*.md where appropriate
 - [ ] Used tables instead of prose
 - [ ] No content duplication
 
@@ -88,7 +88,7 @@ Improvements:
 ### File Organization
 
 - [ ] Core content in SKILL.md
-- [ ] Detailed guides in skills/terraform-skill/references/*.md
+- [ ] Detailed guides in skills/opentofu-skill/references/*.md
 - [ ] Testing updates in tests/*.md
 - [ ] No new files outside standard structure
 

@@ -1,7 +1,7 @@
 # State Management
 
 > **Part of:** [terraform-skill](../SKILL.md)
-> **Purpose:** Comprehensive state management patterns and best practices for Terraform/OpenTofu
+> **Purpose:** Comprehensive state management patterns and best practices for OpenTofu
 
 This document provides detailed guidance on state management, from remote backend configuration to recovery strategies and multi-team isolation patterns.
 
@@ -44,7 +44,7 @@ This document provides detailed guidance on state management, from remote backen
 | `s3` | AWS workloads, existing AWS state |
 | `azurerm` | Azure workloads |
 | `gcs` | GCP workloads |
-| `cloud` / TF Cloud / HCP | hosted state, run management, policy enforcement |
+| `cloud` / hosted platform | hosted state, run management, policy enforcement |
 
 Locking mechanism per backend: see [Backend Locking Support](#backend-locking-support) below.
 
@@ -67,7 +67,7 @@ Locking mechanism per backend: see [Backend Locking Support](#backend-locking-su
 
 ### AWS S3 Backend (Recommended)
 
-#### S3 with Native Lock-File (Terraform 1.10+, Recommended)
+#### S3 with Native Lock-File (OpenTofu 1.10+, Recommended)
 
 **Simplest setup - no DynamoDB required:**
 
@@ -79,7 +79,7 @@ terraform {
     key          = "prod/vpc/terraform.tfstate"
     region       = "us-east-1"
     encrypt      = true
-    use_lockfile = true  # Native S3 locking (Terraform 1.10+)
+    use_lockfile = true  # Native S3 locking (OpenTofu 1.10+)
     
     # Optional but recommended
     kms_key_id = "arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"
@@ -110,13 +110,13 @@ terraform {
 ```
 
 **When to use DynamoDB locking:**
-- Terraform versions < 1.10
+- OpenTofu versions < 1.10
 - Existing infrastructure already using DynamoDB
 - Need DynamoDB for other purposes
 
 **Migration note:** Existing setups using DynamoDB will continue to work. The `use_lockfile` option is opt-in.
 
-**Backend infrastructure setup (Terraform 1.10+ with lock-file):**
+**Backend infrastructure setup (OpenTofu 1.10+ with lock-file):**
 
 ```hcl
 # bootstrap/main.tf - Run this ONCE to create state backend
@@ -157,8 +157,8 @@ resource "aws_s3_bucket_public_access_block" "terraform_state" {
 }
 
 # MFA Delete for production
-# Note: Terraform cannot enable S3 MFA Delete. This must be configured
-# outside of Terraform using the AWS CLI or an SDK with the root account.
+# Note: OpenTofu cannot enable S3 MFA Delete. This must be configured
+# outside of OpenTofu using the AWS CLI or an SDK with the root account.
 #
 # Example (run once, after bucket creation and versioning are enabled):
 #
@@ -169,7 +169,7 @@ resource "aws_s3_bucket_public_access_block" "terraform_state" {
 
 # KMS key for encryption
 resource "aws_kms_key" "terraform_state" {
-  description             = "KMS key for Terraform state encryption"
+  description             = "KMS key for OpenTofu state encryption"
   deletion_window_in_days = 30
   enable_key_rotation     = true
 
@@ -205,7 +205,7 @@ resource "aws_dynamodb_table" "terraform_state_lock" {
   }
 
   tags = {
-    Name        = "Terraform State Lock Table"
+    Name        = "OpenTofu State Lock Table"
     Environment = "shared"
   }
 }
@@ -334,7 +334,7 @@ resource "google_kms_crypto_key" "terraform_state" {
 }
 ```
 
-### Terraform Cloud/Enterprise Backend
+### Hosted Cloud Backend
 
 ```hcl
 # backend.tf
@@ -350,7 +350,7 @@ terraform {
   }
 }
 
-# Alternative: Terraform Enterprise with custom hostname
+# Alternative: hosted enterprise backend with custom hostname
 terraform {
   cloud {
     hostname     = "terraform.company.com"
@@ -363,7 +363,7 @@ terraform {
 }
 ```
 
-Terraform Cloud provides: built-in state management and locking, remote execution, Sentinel policy enforcement, cost estimation, private module registry, VCS integration — no backend infra to manage.
+Hosted cloud backends provide: built-in state management and locking, remote execution, policy enforcement, cost estimation, private module registry, and VCS integration — no backend infra to manage.
 
 ### Backend Configuration Best Practices
 
@@ -399,12 +399,12 @@ terraform {
 
 ```bash
 # Pass sensitive config at init time
-terraform init \
+tofu init \
   -backend-config="key=prod/vpc/terraform.tfstate" \
   -backend-config="dynamodb_table=terraform-state-lock"
 
 # Or use a file
-terraform init -backend-config=backend-prod.hcl
+tofu init -backend-config=backend-prod.hcl
 ```
 
 ---
@@ -415,8 +415,8 @@ terraform init -backend-config=backend-prod.hcl
 
 **Without locking:**
 ```
-User A: terraform apply  (starts)
-User B: terraform apply  (starts at same time)
+User A: tofu apply  (starts)
+User B: tofu apply  (starts at same time)
 Result: Both read same state, make conflicting changes
         → State corruption
         → Infrastructure drift
@@ -425,8 +425,8 @@ Result: Both read same state, make conflicting changes
 
 **With locking:**
 ```
-User A: terraform apply  (acquires lock)
-User B: terraform apply  (waits for lock)
+User A: tofu apply  (acquires lock)
+User B: tofu apply  (waits for lock)
 Result: Operations are serialized
         → State consistency maintained
 ```
@@ -435,16 +435,16 @@ Result: Operations are serialized
 
 | Backend | Locking | Lock Mechanism |
 |---------|---------|----------------|
-| **S3** (Terraform 1.10+) | ✅ Native | Lock files |
+| **S3** (OpenTofu 1.10+) | ✅ Native | Lock files |
 | **S3** (Pre-1.10) | ✅ With DynamoDB | DynamoDB table |
 | **Azure Storage** | ✅ Native | Blob lease |
 | **GCS** | ✅ Native | Object metadata |
-| **Terraform Cloud** | ✅ Native | Built-in |
+| **Hosted cloud backend** | ✅ Native | Built-in |
 | **Consul** | ✅ Native | Consul KV |
 | **Postgres** | ✅ Native | Row locking |
 | **Local** | ❌ None | N/A |
 
-### S3 Native Lock-File (Terraform 1.10+)
+### S3 Native Lock-File (OpenTofu 1.10+)
 
 **How it works:**
 - Uses regular S3 objects as lock files
@@ -466,7 +466,7 @@ terraform {
 }
 ```
 
-**Migration from DynamoDB:** Set both `dynamodb_table` and `use_lockfile = true` during Terraform 1.10+ migration — locks acquire via both mechanisms. Once every workflow runs on 1.10+, remove `dynamodb_table`.
+**Migration from DynamoDB:** Set both `dynamodb_table` and `use_lockfile = true` during an OpenTofu 1.10+ migration — locks acquire via both mechanisms. Once every workflow runs on 1.10+, remove `dynamodb_table`.
 
 ### DynamoDB Locking for S3 (Pre-1.10 or Legacy)
 
@@ -478,16 +478,16 @@ terraform {
 **Lock behavior:**
 
 ```bash
-# Terraform acquires lock
-terraform plan
+# OpenTofu acquires lock
+tofu plan
 # Creates lock: LockID = "bucket/path/to/state"
 
 # Another user attempts operation
-terraform apply
+tofu apply
 # Sees: Error acquiring the state lock
 # Default: `-lock-timeout=0s` — fail immediately on lock contention.
 # Set `-lock-timeout=<duration>` (e.g. `5m`) to retry with backoff for the specified window.
-#   terraform apply -lock-timeout=5m
+#   tofu apply -lock-timeout=5m
 ```
 
 **View current locks:**
@@ -524,14 +524,14 @@ Lock Info:
 
 2. **Check if operation is actually running**
    ```bash
-   # If user@host is accessible, check if terraform is running
-   ssh user@host "ps aux | grep terraform"
+  # If user@host is accessible, check if tofu is running
+  ssh user@host "ps aux | grep tofu"
    ```
 
 3. **Force unlock if operation crashed** (DANGEROUS)
    ```bash
    # Only if you're CERTAIN the lock is stale
-   terraform force-unlock a1b2c3d4-e5f6-7890-abcd-ef1234567890
+  tofu force-unlock a1b2c3d4-e5f6-7890-abcd-ef1234567890
    ```
 
 #### Scenario 2: Stale Lock (Operation Crashed)
@@ -551,7 +551,7 @@ Lock Info:
 
 ```bash
 # 1. Verify lock exists
-terraform plan
+tofu plan
 # Note the Lock ID from error message
 
 # 2. Check if operation is actually running
@@ -560,7 +560,7 @@ terraform plan
 # - Ask team members
 
 # 3. Only if confirmed stale, force unlock
-terraform force-unlock LOCK_ID
+tofu force-unlock LOCK_ID
 
 # 4. Document why you force-unlocked
 git commit -m "Force-unlocked state after CI job termination"
@@ -568,9 +568,9 @@ git commit -m "Force-unlocked state after CI job termination"
 
 ### Automatic Lock Timeout
 
-**Terraform Cloud lock timeout:**
+**Hosted cloud backend lock timeout:**
 
-Lock timeout in Terraform Cloud is configured through workspace settings in the Terraform Cloud UI under "General Settings" → "Remote Operations" → "Lock Timeout". It cannot be configured through the `cloud` block in Terraform code.
+Lock timeout in a hosted cloud backend is configured through workspace settings in the backend UI. It cannot be configured through the `cloud` block in code.
 
 **For other backends, implement timeout in automation:**
 
@@ -579,10 +579,10 @@ Lock timeout in Terraform Cloud is configured through workspace settings in the 
 # wrapper-script.sh
 LOCK_TIMEOUT=300  # 5 minutes
 
-timeout $LOCK_TIMEOUT terraform apply -auto-approve
+timeout $LOCK_TIMEOUT tofu apply -auto-approve
 
 if [ $? -eq 124 ]; then
-  echo "Terraform timed out - likely lock held"
+  echo "OpenTofu timed out - likely lock held"
   exit 1
 fi
 ```
@@ -594,24 +594,24 @@ fi
 ```yaml
 # GitHub Actions - Use concurrency control
 concurrency:
-  group: terraform-${{ github.ref }}
+  group: opentofu-${{ github.ref }}
   cancel-in-progress: false  # Don't cancel, wait instead
 
 jobs:
-  terraform:
+  opentofu:
     runs-on: ubuntu-latest
     steps:
-      - name: Terraform Apply
-        run: terraform apply -auto-approve
+      - name: OpenTofu Apply
+        run: tofu apply -auto-approve
 ```
 
 **GitLab CI:**
 
 ```yaml
 # .gitlab-ci.yml
-terraform-apply:
+opentofu-apply:
   script:
-    - terraform apply -auto-approve
+    - tofu apply -auto-approve
   resource_group: terraform-prod  # Only one job at a time
 ```
 
@@ -649,7 +649,7 @@ terraform {
 - S3: HTTPS
 - Azure Storage: HTTPS
 - GCS: HTTPS
-- Terraform Cloud: HTTPS
+- Hosted cloud backend: HTTPS
 
 **Enforce TLS-only access:**
 
@@ -822,7 +822,7 @@ variable "database_password" {
 }
 ```
 
-#### ✅ DO: Use Write-Only Arguments (Terraform 1.11+)
+#### ✅ DO: Use Write-Only Arguments (OpenTofu 1.11+)
 
 ```hcl
 # Good: Password never stored in state
@@ -845,7 +845,7 @@ data "aws_secretsmanager_secret_version" "db_password" {
 > **Caveat:** Reading a secret through `data "aws_secretsmanager_secret_version"`
 > pulls `secret_string` into the state file on every refresh. If the goal is to
 > keep the raw secret out of state, use an `ephemeral` resource/data source
-> (Terraform 1.10+), `manage_master_user_password`, or inject the value via a
+> (OpenTofu 1.10+), `manage_master_user_password`, or inject the value via a
 > CI-only environment variable instead of a data source.
 
 #### ✅ DO: Reference External Secrets
@@ -865,14 +865,14 @@ resource "aws_db_instance" "this" {
 > **Caveat:** The data source writes `secret_string` into state on every refresh,
 > so this pattern avoids hardcoding — it does not exclude the secret from state.
 > For true state exclusion, use an `ephemeral` resource/data source
-> (Terraform 1.10+), `manage_master_user_password`, or a CI-injected env var.
+> (OpenTofu 1.10+), `manage_master_user_password`, or a CI-injected env var.
 
 #### Best Practice: Reconcile State After External Secret Rotation
 
 ```bash
-# After rotation (handled outside Terraform), refresh state so it reflects
+# After rotation (handled outside OpenTofu), refresh state so it reflects
 # the new value. This does not rotate the secret itself.
-terraform apply -refresh-only
+tofu apply -refresh-only
 ```
 
 ### State File Audit Logging
@@ -928,11 +928,11 @@ targeting the storage account's `blobServices` resource.
 
 ```bash
 # In bootstrap directory
-terraform init
-terraform apply
+tofu init
+tofu apply
 ```
 
-**Step 2: Add backend config to your Terraform code**
+**Step 2: Add backend config to your OpenTofu code**
 
 ```hcl
 # backend.tf - Add this file
@@ -954,13 +954,13 @@ terraform {
 cp terraform.tfstate terraform.tfstate.backup
 
 # Migrate to S3
-terraform init -migrate-state
+tofu init -migrate-state
 
-# Terraform will ask: "Do you want to copy existing state to the new backend?"
+# OpenTofu will ask: "Do you want to copy existing state to the new backend?"
 # Answer: yes
 
 # Verify migration
-terraform plan  # Should show no changes
+tofu plan  # Should show no changes
 
 # Verify state in S3
 aws s3 ls s3://my-terraform-state/prod/vpc/
@@ -977,20 +977,20 @@ git add backend.tf
 git commit -m "Migrate state to S3 backend"
 ```
 
-#### S3 → Terraform Cloud Migration
+#### S3 → Hosted Cloud Backend Migration
 
-**Step 1: Authenticate to Terraform Cloud**
+**Step 1: Authenticate to the hosted cloud backend**
 
 ```bash
 # Authenticate the CLI
-terraform login
+tofu login
 ```
 
-The Terraform Cloud workspace is created automatically on first `terraform init`
+The hosted backend workspace is created automatically on first `tofu init`
 against the `cloud {}` block below (provided the org permits auto-creation).
 Alternatively, pre-create it in the TFC UI or with the `tfe_workspace` resource.
-Do NOT use `terraform workspace new` here — CLI workspaces are a different
-concept from Terraform Cloud workspaces.
+Do NOT use `tofu workspace new` here — CLI workspaces are a different
+concept from hosted backend workspaces.
 
 **Step 2: Update backend config**
 
@@ -1013,17 +1013,17 @@ terraform {
 
 ```bash
 # Initialize with migration
-terraform init -migrate-state
+tofu init -migrate-state
 
 # Confirm migration
-# State will be uploaded to Terraform Cloud
+# State will be uploaded to the hosted cloud backend
 ```
 
 **Step 4: Verify and clean up**
 
 ```bash
-# Verify in Terraform Cloud UI or CLI
-terraform state list
+# Verify in the backend UI or CLI
+tofu state list
 
 # Old S3 state remains as backup - don't delete immediately
 # Keep for 30-90 days, then remove
@@ -1037,19 +1037,19 @@ terraform state list
 # Change backend config in backend.tf
 
 # Re-initialize (will create new empty state)
-terraform init -reconfigure
+tofu init -reconfigure
 
 # Import existing resources
-terraform import aws_vpc.this vpc-12345678
-terraform import aws_subnet.private subnet-abcd1234
+tofu import aws_vpc.this vpc-12345678
+tofu import aws_subnet.private subnet-abcd1234
 # ... import all resources ...
 
 # Or destroy and recreate
-terraform destroy  # In old backend
-terraform apply    # In new backend
+tofu destroy  # In old backend
+tofu apply    # In new backend
 ```
 
-### State Refactoring with `terraform state mv`
+### State Refactoring with `tofu state mv`
 
 **Use cases:**
 - Renaming resources
@@ -1063,13 +1063,13 @@ terraform apply    # In new backend
 # Before: aws_instance.server
 # After:  aws_instance.web_server
 
-terraform state mv aws_instance.server aws_instance.web_server
+tofu state mv aws_instance.server aws_instance.web_server
 
 # Update code to match
 # In main.tf: resource "aws_instance" "web_server" { ... }
 
 # Verify
-terraform plan  # Should show no changes
+tofu plan  # Should show no changes
 ```
 
 #### Moving Resource to Module
@@ -1080,19 +1080,19 @@ terraform plan  # Should show no changes
 
 # Step 1: Create module with resource
 # Step 2: Move state
-terraform state mv aws_s3_bucket.logs module.logging.aws_s3_bucket.logs
+tofu state mv aws_s3_bucket.logs module.logging.aws_s3_bucket.logs
 
 # Step 3: Remove old resource from root module
 # Step 4: Add module call
 # Step 5: Verify
-terraform plan  # Should show no changes
+tofu plan  # Should show no changes
 ```
 
 #### Moving Resource Between Modules
 
 ```bash
 # Move from module.old to module.new
-terraform state mv \
+tofu state mv \
   module.old.aws_instance.app \
   module.new.aws_instance.app
 ```
@@ -1101,16 +1101,16 @@ terraform state mv \
 
 **Scenario:** Splitting state into separate files
 
-**Note:** `terraform state mv` only works within the same state file. To move resources between different state files, use the approach below.
+**Note:** `tofu state mv` only works within the same state file. To move resources between different state files, use the approach below.
 
-**Recommended approach: Use `terraform state rm` and `import`**
+**Recommended approach: Use `tofu state rm` and `import`**
 
 ```bash
 # In source state - remove resource
-terraform state rm aws_rds_cluster.main
+tofu state rm aws_rds_cluster.main
 
 # In destination state - import resource
-terraform import aws_rds_cluster.main cluster-identifier
+tofu import aws_rds_cluster.main cluster-identifier
 ```
 
 ### State Push/Pull Operations
@@ -1119,20 +1119,20 @@ terraform import aws_rds_cluster.main cluster-identifier
 
 ```bash
 # View current state
-terraform state pull
+tofu state pull
 
 # Save to file
-terraform state pull > terraform.tfstate.backup
+tofu state pull > terraform.tfstate.backup
 
 # View specific resource
-terraform state show aws_instance.web
+tofu state show aws_instance.web
 ```
 
 **Push state (upload):**
 
 ```bash
 # Restore from backup
-terraform state push terraform.tfstate.backup
+tofu state push terraform.tfstate.backup
 
 # DANGEROUS: Overwrites remote state
 # Only use for disaster recovery
@@ -1143,7 +1143,7 @@ terraform state push terraform.tfstate.backup
 - ✅ Disaster recovery
 - ✅ Debugging state issues
 - ✅ Manual state surgery (advanced)
-- ❌ Regular operations (use terraform commands)
+- ❌ Regular operations (use `tofu` commands)
 - ❌ Concurrent team access
 
 ### State Backup Strategies
@@ -1170,14 +1170,14 @@ aws s3api get-object \
 
 ```bash
 # Manual backup before major changes
-terraform state pull > backup-$(date +%Y%m%d-%H%M%S).tfstate
+tofu state pull > backup-$(date +%Y%m%d-%H%M%S).tfstate
 
 # Or in automation
 #!/bin/bash
 BACKUP_DIR="./state-backups"
 mkdir -p $BACKUP_DIR
 
-terraform state pull > "$BACKUP_DIR/terraform.tfstate.$(date +%Y%m%d-%H%M%S)"
+tofu state pull > "$BACKUP_DIR/terraform.tfstate.$(date +%Y%m%d-%H%M%S)"
 
 # Keep last 30 backups
 ls -t $BACKUP_DIR/terraform.tfstate.* | tail -n +31 | xargs rm -f
@@ -1204,29 +1204,29 @@ aws s3api get-object \
   terraform.tfstate.recovered
 
 # Step 2: Push recovered state
-terraform state push terraform.tfstate.recovered
+tofu state push terraform.tfstate.recovered
 
 # Step 3: Verify
-terraform plan
+tofu plan
 
 # Step 4: If resources drifted, reconcile
-terraform apply -refresh-only
+tofu apply -refresh-only
 ```
 
 ### Provider Removal
 
-Terraform calls the provider plugin's `Destroy` RPC during apply. Keep the provider installed until every resource for that provider is destroyed or removed from state.
+OpenTofu calls the provider plugin's `Destroy` RPC during apply. Keep the provider installed until every resource for that provider is destroyed or removed from state.
 
 | Goal | Use | Tradeoff |
 |------|-----|----------|
 | Remove provider and destroy the real resource | Two-phase removal (default) | Safe; requires `apply` |
-| Remove provider and keep the real resource | `removed` block (Terraform 1.7+, OpenTofu 1.7+) | Declarative; real resource stays but becomes unmanaged |
-| Remove from state manually | `terraform state rm <addr>` | Orphans the real resource; use only when intentionally abandoning |
+| Remove provider and keep the real resource | `removed` block (OpenTofu 1.7+) | Declarative; real resource stays but becomes unmanaged |
+| Remove from state manually | `tofu state rm <addr>` | Orphans the real resource; use only when intentionally abandoning |
 
 **Two-phase removal**
 
-1. **Phase 1 — destroy resources, keep provider:** Delete resource blocks from config (or mark for destruction). Keep the `provider` block and `required_providers` entry. Run `terraform plan` and confirm target resources show `destroy`. Run `terraform apply`. Run `terraform state list` and verify no resources remain for that provider.
-2. **Phase 2 — remove provider:** Remove the `provider` block and the `required_providers` entry. Run `terraform init`. Run `terraform plan` and expect no changes and no errors.
+1. **Phase 1 — destroy resources, keep provider:** Delete resource blocks from config (or mark for destruction). Keep the `provider` block and `required_providers` entry. Run `tofu plan` and confirm target resources show `destroy`. Run `tofu apply`. Run `tofu state list` and verify no resources remain for that provider.
+2. **Phase 2 — remove provider:** Remove the `provider` block and the `required_providers` entry. Run `tofu init`. Run `tofu plan` and expect no changes and no errors.
 
 **`removed` block**
 
@@ -1244,7 +1244,7 @@ removed {
 
 - ❌ Remove the provider block first: plan cannot resolve the resource type → hard error.
 - ✅ Same rule applies to provider aliases and multi-provider modules.
-- ✅ Plain `terraform init` after removal; `-upgrade` is for bumping existing providers, not required here.
+- ✅ Plain `tofu init` after removal; `-upgrade` is for bumping existing providers, not required here.
 
 ---
 
@@ -1412,8 +1412,8 @@ resource "aws_instance" "app" {
 
 **Benefits over remote_state:**
 - ✅ No direct state dependency
-- ✅ Can be read by non-Terraform tools
-- ✅ Can be updated without Terraform
+- ✅ Can be read by non-OpenTofu tools
+- ✅ Can be updated without OpenTofu
 - ✅ Fine-grained IAM control
 
 **Drawbacks:**
@@ -1478,7 +1478,7 @@ resource "aws_instance" "app" {
 
 **Symptoms:**
 ```
-Error: state snapshot was created by Terraform v1.8.0,
+Error: state snapshot was created by OpenTofu v1.8.0,
        which is newer than current v1.6.0
 ```
 
@@ -1498,18 +1498,18 @@ aws s3api get-object \
   --version-id PREVIOUS_VERSION \
   terraform.tfstate.restored
 
-terraform state push terraform.tfstate.restored
+tofu state push terraform.tfstate.restored
 ```
 
-**B) Upgrade Terraform:**
+**B) Upgrade OpenTofu:**
 
 ```bash
 # Download newer version
-tfenv install 1.8.0
-tfenv use 1.8.0
+tenv tofu install 1.8.0
+tenv tofu use 1.8.0
 
 # Verify
-terraform version
+tofu version
 ```
 
 #### Scenario 2: State Completely Lost
@@ -1523,16 +1523,16 @@ terraform version
 # (You'll need to know what was managed)
 
 # Import resources one by one
-terraform import aws_vpc.main vpc-12345678
-terraform import aws_subnet.private[0] subnet-abcd1234
-terraform import aws_subnet.private[1] subnet-efgh5678
+tofu import aws_vpc.main vpc-12345678
+tofu import aws_subnet.private[0] subnet-abcd1234
+tofu import aws_subnet.private[1] subnet-efgh5678
 # ... continue for all resources ...
 
 # Verify
-terraform plan  # Should eventually show no changes
+tofu plan  # Should eventually show no changes
 ```
 
-2. **Use import blocks (Terraform 1.5+):**
+2. **Use import blocks (OpenTofu 1.5+):**
 
 ```hcl
 # import.tf
@@ -1548,9 +1548,9 @@ import {
 ```
 
 ```bash
-terraform plan -generate-config-out=generated.tf
+tofu plan -generate-config-out=generated.tf
 # Review generated.tf and merge with existing config
-terraform apply
+tofu apply
 ```
 
 ### Handling State Lock Stuck Issues
@@ -1572,7 +1572,7 @@ aws dynamodb get-item \
 
 ```bash
 # Get Lock ID from error message or DynamoDB
-terraform force-unlock LOCK_ID
+tofu force-unlock LOCK_ID
 
 # Confirm when prompted
 ```
@@ -1590,11 +1590,11 @@ Use concurrency controls instead of automatic force-unlock (see CI/CD section be
 ```yaml
 # GitHub Actions
 concurrency:
-  group: terraform-${{ matrix.environment }}
+  group: opentofu-${{ matrix.environment }}
   cancel-in-progress: false
 
 jobs:
-  terraform:
+  opentofu:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -1615,7 +1615,7 @@ terraform {
 }
 
 # In CI/CD workflow (e.g., GitHub Actions):
-# terraform init -backend-config="key=pr-${GITHUB_PR_NUMBER}/terraform.tfstate"
+# tofu init -backend-config="key=pr-${GITHUB_PR_NUMBER}/terraform.tfstate"
 ```
 
 ### State Refresh and Reconciliation
@@ -1625,8 +1625,8 @@ terraform {
 **Detect drift:**
 
 ```bash
-# Terraform 0.15.4+
-terraform plan -refresh-only
+# OpenTofu 0.15.4+
+tofu plan -refresh-only
 
 # Shows what's changed in infrastructure vs state
 ```
@@ -1635,30 +1635,30 @@ terraform plan -refresh-only
 
 ```bash
 # Update state to match reality (no infrastructure changes)
-terraform apply -refresh-only
+tofu apply -refresh-only
 
 # Or during regular plan/apply
-terraform plan   # Includes refresh
-terraform apply  # Updates state
+tofu plan   # Includes refresh
+tofu apply  # Updates state
 ```
 
 **Common drift causes:**
 - Manual changes in AWS console
 - Changes by other tools (aws cli, CDK)
-- Resource deletion outside Terraform
+- Resource deletion outside OpenTofu
 - Provider API changes
 
 **Prevent drift:**
 - ✅ Use CloudTrail to monitor manual changes
 - ✅ Implement policy to block manual changes
-- ✅ Use drift detection tools (Terraform Cloud drift detection, driftctl)
-- ✅ Regular `terraform plan` in CI/CD
+- ✅ Use drift detection tools (hosted backend drift detection, driftctl)
+- ✅ Regular `tofu plan` in CI/CD
 - ✅ Enable termination protection on critical resources
 
 ### Import for State Recovery
 
 **When to use import:**
-- Resources created manually, now want Terraform to manage
+- Resources created manually, now want OpenTofu to manage
 - Recovering from state loss
 - Adopting existing infrastructure
 - Migrating from other IaC tools
@@ -1683,14 +1683,14 @@ resource "aws_instance" "web" {
 aws ec2 describe-instances --filters "Name=tag:Name,Values=web-server"
 
 # Import
-terraform import aws_instance.web i-1234567890abcdef0
+tofu import aws_instance.web i-1234567890abcdef0
 ```
 
 **3. Reconcile configuration:**
 
 ```bash
 # Plan will show attributes that don't match
-terraform plan
+tofu plan
 
 # Update main.tf to match actual resource
 # Or update resource to match main.tf
@@ -1699,7 +1699,7 @@ terraform plan
 **4. Verify:**
 
 ```bash
-terraform plan  # Should show no changes
+tofu plan  # Should show no changes
 ```
 
 **Bulk import:**
@@ -1715,11 +1715,11 @@ INSTANCE_IDS=$(aws ec2 describe-instances \
 
 # Import each
 for instance_id in $INSTANCE_IDS; do
-  terraform import "aws_instance.imported[\"$instance_id\"]" "$instance_id"
+  tofu import "aws_instance.imported[\"$instance_id\"]" "$instance_id"
 done
 ```
 
-**Terraform 1.5+ import blocks:**
+**OpenTofu 1.5+ import blocks:**
 
 ```hcl
 # Generate configuration from imports
@@ -1736,10 +1736,10 @@ import {
 
 ```bash
 # Generate configuration
-terraform plan -generate-config-out=imported.tf
+tofu plan -generate-config-out=imported.tf
 
 # Review and merge
-terraform apply
+tofu apply
 ```
 
 ---
@@ -1764,11 +1764,11 @@ terraform apply
 # DON'T manually edit state files
 vim terraform.tfstate  # ❌ Likely to corrupt
 ```
-✅ **Instead:** Use terraform state commands
+✅ **Instead:** Use OpenTofu state commands
 ```bash
-terraform state mv
-terraform state rm
-terraform import
+tofu state mv
+tofu state rm
+tofu import
 ```
 
 ❌ **Anti-Pattern 2: Sharing state files via git**
@@ -1799,11 +1799,11 @@ Common model mistakes to correct before returning state-related recommendations:
 - recommends local state in team/production contexts
 - proposes one monolithic root state for "convenience"
 - suggests `rm .terraform.tfstate.lock.info` or `force-unlock` without investigating why the lock exists
-- edits `terraform.tfstate` manually instead of using `terraform state mv/rm/import`
+- edits `terraform.tfstate` manually instead of using `tofu state mv/rm/import`
 - commits `*.tfstate` to git
 - mixes prod and non-prod in the same backend key
 - recommends workspace-only isolation as a substitute for backend-level IAM separation
-- writes DynamoDB-lock configuration on Terraform 1.10+ instead of using `use_lockfile = true` on the S3 backend
+- writes DynamoDB-lock configuration on OpenTofu 1.10+ instead of using `use_lockfile = true` on the S3 backend
 - reads via `terraform_remote_state` within a single team's stack instead of using module outputs (see [module-patterns.md](module-patterns.md#3-use-terraform_remote_state-sparingly--only-at-true-ownership-boundaries))
 - omits the rollback/recovery note for destructive state operations
 

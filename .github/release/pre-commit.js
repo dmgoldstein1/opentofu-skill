@@ -23,7 +23,7 @@ const fs = require('fs')
 const path = require('path')
 const { execSync } = require('child_process')
 
-const SKILL_REL = 'skills/terraform-skill/SKILL.md'
+const SKILL_REL = 'skills/opentofu-skill/SKILL.md'
 const MANIFEST_REL = '.codex-plugin/plugin.json'
 const SENTINEL_REL = 'version.json'
 
