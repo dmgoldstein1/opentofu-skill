@@ -1,6 +1,6 @@
 # OpenTofu Vultr Provider Documentation
 
-Complete documentation for the Vultr provider for OpenTofu/Terraform v2.31.2.
+Complete documentation for the Vultr provider for OpenTofu/Terraform v2.31.2. Scraped on Monday, May 25, 2026.
 
 ## Contents
 
