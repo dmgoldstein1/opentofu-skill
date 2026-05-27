@@ -4,6 +4,15 @@ A best-practices skill for OpenTofu on macOS and Linux, for AI coding agents (Cl
 
 AWS stays the default in examples, but this skill set has specific information for AWS, GPC, Azure and Vultr. The same backend, auth, security, and resource guidance applies to all three
 
+## Included skills
+
+This repository now includes two skills under `skills/`:
+
+- `opentofu-skill`: OpenTofu best practices for day-to-day infrastructure authoring, testing, state, CI/CD, and security.
+- `skill-creator`: A vendored meta-skill from Anthropic for creating, evaluating, and improving other skills.
+
+Use the same install command for this repository; compatible hosts auto-discover both skills and trigger the one that best matches the prompt.
+
 ## What this skill provides
 
 **Testing frameworks**
