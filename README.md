@@ -1,12 +1,8 @@
 # OpenTofu Skill for AI Agents
 
-[![Agent Skill](https://img.shields.io/badge/Agent-Skill-5865F2)](https://agentskills.io)
-[![OpenTofu](https://img.shields.io/badge/OpenTofu-1.6+-FFD814)](https://opentofu.org/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
-
 A best-practices skill for OpenTofu on macOS and Linux, for AI coding agents (Claude Code, Cursor, Copilot, Gemini CLI, OpenCode, Codex, Kiro, and more). It helps the agent test code, structure modules, set up CI/CD, and write production infrastructure code.
 
-AWS, Azure, and GCP are all first-class. AWS stays the default in examples, but the same backend, auth, security, and resource guidance applies to all three - ask for the Azure or GCP equivalent of any pattern and the skill maps it.
+AWS stays the default in examples, but this skill set has specific information for AWS, GPC, Azure and Vultr. The same backend, auth, security, and resource guidance applies to all three
 
 ## What this skill provides
 
@@ -44,17 +40,16 @@ AWS, Azure, and GCP are all first-class. AWS stays the default in examples, but 
 
 ## Installation
 
-Installed through the `antonbabenko/agent-plugins` marketplace where supported
-(opentofu-skill is listed there as an external plugin). Do not also add
-`antonbabenko/terraform-skill` as a marketplace - both use the same marketplace
-name and will clash.
+Install from this repository:
+
+- [dmgoldstein1/opentofu-skill](https://github.com/dmgoldstein1/opentofu-skill)
 
 ### Quick install (any agent)
 
 Works with any [Agent Skills](https://agentskills.io)-compatible tool:
 
 ```bash
-npx skills add https://github.com/antonbabenko/terraform-skill
+npx skills add https://github.com/dmgoldstein1/opentofu-skill
 ```
 
 ### Per-host instructions
@@ -65,8 +60,7 @@ npx skills add https://github.com/antonbabenko/terraform-skill
 <summary>Claude Code</summary>
 
 ```bash
-/plugin marketplace add antonbabenko/agent-plugins
-/plugin install opentofu-skill@antonbabenko
+/plugin install https://github.com/dmgoldstein1/opentofu-skill
 ```
 
 </details>
@@ -75,10 +69,10 @@ npx skills add https://github.com/antonbabenko/terraform-skill
 <summary>Gemini CLI</summary>
 
 ```bash
-gemini extensions install https://github.com/antonbabenko/terraform-skill
+gemini extensions install https://github.com/dmgoldstein1/opentofu-skill
 ```
 
-Update with `gemini extensions update terraform-skill`.
+Update with `gemini extensions update opentofu-skill`.
 
 </details>
 
@@ -86,7 +80,7 @@ Update with `gemini extensions update terraform-skill`.
 <summary>Cursor</summary>
 
 ```bash
-git clone https://github.com/antonbabenko/terraform-skill.git ~/.cursor/skills/opentofu-skill
+git clone https://github.com/dmgoldstein1/opentofu-skill.git ~/.cursor/skills/opentofu-skill
 ```
 
 Cursor auto-discovers skills from `.agents/skills/` and `.cursor/skills/`.
@@ -97,9 +91,9 @@ Cursor auto-discovers skills from `.agents/skills/` and `.cursor/skills/`.
 <summary>Copilot</summary>
 
 ```bash
-/plugin install https://github.com/antonbabenko/terraform-skill
+/plugin install https://github.com/dmgoldstein1/opentofu-skill
 # or
-git clone https://github.com/antonbabenko/terraform-skill.git ~/.copilot/skills/opentofu-skill
+git clone https://github.com/dmgoldstein1/opentofu-skill.git ~/.copilot/skills/opentofu-skill
 ```
 
 Copilot auto-discovers skills from `.copilot/skills/`.
@@ -110,7 +104,7 @@ Copilot auto-discovers skills from `.copilot/skills/`.
 <summary>OpenCode</summary>
 
 ```bash
-git clone https://github.com/antonbabenko/terraform-skill.git ~/.agents/skills/opentofu-skill
+git clone https://github.com/dmgoldstein1/opentofu-skill.git ~/.agents/skills/opentofu-skill
 ```
 
 OpenCode auto-discovers skills from `.agents/skills/`, `.opencode/skills/`, and `.claude/skills/`.
@@ -121,15 +115,10 @@ OpenCode auto-discovers skills from `.agents/skills/`, `.opencode/skills/`, and 
 <summary>Codex (OpenAI)</summary>
 
 ```bash
-git clone https://github.com/antonbabenko/terraform-skill.git ~/.agents/skills/opentofu-skill
+git clone https://github.com/dmgoldstein1/opentofu-skill.git ~/.agents/skills/opentofu-skill
 ```
 
 Codex auto-discovers skills from `~/.agents/skills/` and `.agents/skills/`. Update with `cd ~/.agents/skills/opentofu-skill && git pull`.
-
-For a managed Codex plugin install, use the `antonbabenko/agent-plugins`
-marketplace (`codex plugin marketplace add antonbabenko/agent-plugins`, then
-install `terraform-skill`). Do not add `antonbabenko/terraform-skill` as a
-separate marketplace - it clashes by name with `agent-plugins`.
 
 </details>
 
@@ -137,7 +126,7 @@ separate marketplace - it clashes by name with `agent-plugins`.
 <summary>Kiro</summary>
 
 ```bash
-git clone https://github.com/antonbabenko/terraform-skill.git ~/.kiro/skills/opentofu-skill
+git clone https://github.com/dmgoldstein1/opentofu-skill.git ~/.kiro/skills/opentofu-skill
 ```
 
 Kiro auto-discovers skills from `.kiro/skills/` (workspace) and `~/.kiro/skills/` (global).
@@ -148,7 +137,7 @@ Kiro auto-discovers skills from `.kiro/skills/` (workspace) and `~/.kiro/skills/
 <summary>Antigravity</summary>
 
 ```bash
-git clone https://github.com/antonbabenko/terraform-skill.git ~/.antigravity/skills/opentofu-skill
+git clone https://github.com/dmgoldstein1/opentofu-skill.git ~/.antigravity/skills/opentofu-skill
 ```
 
 Update with `cd ~/.antigravity/skills/opentofu-skill && git pull`.
@@ -159,9 +148,9 @@ Update with `cd ~/.antigravity/skills/opentofu-skill && git pull`.
 <summary>Manual (symlink local clone)</summary>
 
 ```bash
-git clone https://github.com/antonbabenko/terraform-skill
+git clone https://github.com/dmgoldstein1/opentofu-skill
 mkdir -p ~/.claude/plugins
-ln -s "$(pwd)/terraform-skill" ~/.claude/plugins/opentofu-skill
+ln -s "$(pwd)/opentofu-skill" ~/.claude/plugins/opentofu-skill
 ```
 
 A Skills-compatible host autodiscovers the skill at `skills/opentofu-skill/SKILL.md` on next launch. Edits to the clone are picked up live.
@@ -177,34 +166,9 @@ After installation, try:
 "Create an OpenTofu module with testing for an S3 bucket on macOS"
 ```
 
-The host agent picks up the skill automatically when working with OpenTofu code. The repository name remains `terraform-skill` for compatibility, but the skill folder now lives at `skills/opentofu-skill`.
+The host agent picks up the skill automatically when working with OpenTofu code. The repository and skill folder both use `opentofu-skill`.
 
-## Recommended companion: code-intelligence
-
-Install the `code-intelligence` plugin alongside this one:
-
-```bash
-/plugin marketplace add antonbabenko/agent-plugins
-/plugin install code-intelligence@antonbabenko
-```
-
-It holds the general, any-language rules for navigating code (when to use a
-language server, plain text search, or fuzzy search; how to anchor a lookup to
-a position; what to do when a tool fails; saying so when one tool is swapped
-for another). opentofu-skill is the OpenTofu-specific version of those rules.
-Why install it:
-
-- **Fewer tokens** - the rules live in one place. The agent loads them when
-  needed instead of repeating them in every language skill.
-- **More accurate** - it finds definitions and references by meaning, not by
-  plain text matching, so renames and refactors do not miss spots or change
-  the wrong ones.
-- **Faster** - it picks the right tool the first time instead of retrying,
-  and says up front when it had to use a different one.
-
-opentofu-skill works on its own without it. The name `code-intelligence` is
-not unique; if a `code-intelligence` skill is active, check it is the one from
-[antonbabenko/agent-plugins](https://github.com/antonbabenko/agent-plugins).
+This repository is maintained at [dmgoldstein1/opentofu-skill](https://github.com/dmgoldstein1/opentofu-skill).
 
 ## Quick start examples
 
@@ -355,3 +319,7 @@ Report bugs or request features via [GitHub Issues](https://github.com/antonbabe
 ## License
 
 Apache 2.0
+
+## Credits
+
+Thanks to https://github.com/antonbabenko/terraform-skill. This repo is basd on terraform-skill.

@@ -264,7 +264,7 @@ Before emitting a feature, verify the runtime floor. See [Code Patterns: Feature
 
 ## Code Intelligence (HCL LSP)
 
-Semantic navigation for HCL. Use the HCL language server tooling available in the environment; without it every row below degrades to a disclosed `rg` + Read fallback.
+Semantic navigation for HCL. Download and use the OpenTofu Language Server from https://github.com/opentofu/tofu-ls/ when available; without it every row below degrades to a disclosed `rg` + Read fallback.
 
 This section stays self-contained: apply the matrix below directly. Recommended companion: the `code-intelligence` plugin (same `antonbabenko/agent-plugins` marketplace) carries the generic discipline (position anchoring, degradation gate, disclosure format, anti-phantom-shim) and ships `/code-intelligence:doctor` for readiness. If it is installed, defer to its generic protocol.
 
