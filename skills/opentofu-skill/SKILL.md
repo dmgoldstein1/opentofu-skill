@@ -11,6 +11,22 @@ metadata:
 
 Diagnose-first guidance for OpenTofu on macOS and Linux. Core file is a workflow; depth lives in references loaded on demand.
 
+## Activation Cues
+
+Use this skill whenever the user asks for OpenTofu outcomes that can break identity, state, security, or delivery pipelines, even if they do not mention those risks directly.
+
+Trigger phrases and intents include:
+
+- "refactor this module" / "rename this resource" / "convert count to for_each"
+- "set up CI for tofu" / "why is CI plan different from local"
+- "how should I handle state" / "backend migration" / "state lock stuck"
+- "is this OpenTofu secure" / "secrets" / "compliance"
+- "which testing approach should I use" / "tofu test vs terratest"
+- "provider upgrade" / "breaking change" / "version pinning"
+- "Vultr OpenTofu" / "cross-cloud equivalent"
+
+Do not wait for the user to ask for risk controls explicitly; surface them proactively.
+
 ## Response Contract
 
 Every OpenTofu response must include:
@@ -23,15 +39,34 @@ Every OpenTofu response must include:
 
 Never recommend direct production apply without a reviewed plan artifact and approval.
 
+## Response Template
+
+When producing a final answer, use this structure in order:
+
+1. Assumptions and version floor
+2. Diagnosed risk categories
+3. Recommended remediation and tradeoffs
+4. Validation plan (exact commands)
+5. Rollback notes (if state or resource mutation exists)
+
+If the request is read-only (for example explanation-only), include sections 1-4 and explicitly state that rollback is not applicable.
+
 ## Workflow
 
 1. **Capture execution context** — OpenTofu version, provider(s), backend, execution path, environment criticality, host OS.
-2. **Diagnose failure mode(s)** using the routing table below. If intent spans categories, load both references.
-3. **Load only the matching reference file(s)** — do not preload depth the task does not need.
-4. **Propose fix with risk controls** — why this addresses the mode, what could still go wrong, guardrails (tests/approvals/rollback).
-5. **Generate artifacts** — HCL, migration blocks (`moved`, `import`), CI changes, policy rules.
-6. **Validate before finalizing** — run validation commands tailored to risk tier.
-7. **Emit the Response Contract** at the end.
+2. **Ask targeted clarifying questions only when missing critical routing data**:
+  - Runtime floor (for example: 1.5 vs 1.6+ vs 1.11+)
+  - Whether the task can mutate state/resources
+  - Environment criticality (dev/staging/prod)
+  - CI path (local only, CI, cloud runner, Atlantis)
+  - Provider/cloud scope (single cloud vs cross-cloud)
+  If any answer is unknown, proceed with explicit assumptions rather than blocking.
+3. **Diagnose failure mode(s)** using the routing table below. If intent spans categories, load both references.
+4. **Load only the matching reference file(s)** — do not preload depth the task does not need.
+5. **Propose fix with risk controls** — why this addresses the mode, what could still go wrong, guardrails (tests/approvals/rollback).
+6. **Generate artifacts** — HCL, migration blocks (`moved`, `import`), CI changes, policy rules.
+7. **Validate before finalizing** — run validation commands tailored to risk tier.
+8. **Emit the Response Contract** at the end.
 
 ## Diagnose Before You Generate
 

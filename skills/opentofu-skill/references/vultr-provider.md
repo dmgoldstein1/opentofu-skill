@@ -24,6 +24,18 @@ This reference summarizes the Vultr OpenTofu provider capabilities documented in
 | Keep infra discoverable in code | Use Vultr data sources (`vultr_region`, `vultr_plan`, `vultr_instance`) | Data-source filters must match current labels/metadata |
 | Model org and access controls | `organization_*`, `oidc_*`, and `user` resources | Requires careful policy review and separation of duties |
 
+## Cross-Cloud Mapping (Fast Routing)
+
+| If user asks for | Prefer on Vultr | Notes |
+|------------------|-----------------|-------|
+| VM/compute instance parity | `vultr_instance` | Map instance size by plan, not by provider SKU name |
+| Private network parity | `vultr_vpc` or `vultr_vpc2` | Confirm which VPC family is available in target region |
+| Managed DB parity | `vultr_database` + related `database_*` resources | Validate engine + version + plan availability first |
+| Object storage parity | `vultr_object_storage` + bucket resources | Keep credentials out of state outputs |
+| IAM/OIDC parity | `organization_*`, `oidc_*`, `vultr_user` | Do not answer with cloud-agnostic IAM prose only |
+
+When a request is phrased in AWS/Azure/GCP terms, translate intent first, then emit `vultr_*` resource names explicitly.
+
 ## Minimal Provider Setup
 
 ```hcl
@@ -104,6 +116,14 @@ From `README.md` in the imported Vultr docs:
 - API key location: `https://my.vultr.com/settings/#settingsapi`
 - Rate limiting default: `500ms` between calls (about `30` calls/second max)
 - Retry default: `3` retries on failed API calls
+
+## Migration Guardrails
+
+- Confirm region and plan support before proposing a parity migration.
+- Prefer key-based resource identity (`for_each`) during migration to avoid address churn.
+- For renames or resource address changes, emit `moved` blocks and require a reviewed `tofu plan` artifact.
+- Treat API key handling as a security control: environment injection only, never defaults or committed tfvars.
+- If parity is partial, state the gap and propose the nearest Vultr-native pattern instead of pretending one-to-one equivalence.
 
 ## LLM Mistake Checklist - Vultr
 
